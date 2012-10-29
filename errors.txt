@@ -1,0 +1,20 @@
+Hard  1 Confmat  hum101.02.2 cse112.01.2 1995345109 
+Hard  1 Confmat  cor101.01.2 cse252.L1.2 1995345109 
+Hard  1 Confmat  cor111.01.1 cse211.01.1 1995345109 
+Hard  1 Confmat  cor111.01.1 cse211.02.1 1995345109 
+Hard  1 Confmat  cse211.01.1 cse211.02.1 1995345109 
+Hard  1 Confmat  cse211.01.2 cse211.02.2 1995345109 
+Hard  1 Confmat  cse311.01.1 cse343.01.1 1995345109 
+Hard  1 Confmat  cse354.01.2 cse421.L1.2 1995345109 
+Hard  1 Confmat  cse483.01.2 cse462.01.2 1995345109 
+Soft  15 Departmental Meeting      cse344.L1.2 cse344.L1.2 1995844064 
+Soft1  11 L T L conflict         cse112     2 
+Soft1  11 L T L conflict         cse112     2 
+Soft1  11 L T L conflict         cse211     3 
+Soft2  4 Prev Sem Next Sem     cse487.01.1 cse471.01.1 5 
+Soft2  4 Prev Sem Next Sem   LABS  cse348 cse321 5 
+Soft3  14 No Lunch Hour  conflict            16 
+Soft3  14 No Lunch Hour  conflict            60 
+Soft3  5 Evening Lecture     cse221.01.1   60 
+Soft3  5 Evening Lecture     cse232.01.1   60 
+Soft3  5 Evening Lecture     cse354.L1.1   60 

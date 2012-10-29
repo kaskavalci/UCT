@@ -1,0 +1,5 @@
+cse101	cse112
+cse112	cse211
+cse232	cse323
+cse323	cse421
+cse331	cse471

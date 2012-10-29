@@ -1,0 +1,16 @@
+hard soft     19     28   dur  1200 seed            5 
+hard soft     19     28   dur  1200 seed            5 
+hard soft     19     28   dur  1200 seed            5 
+hard soft     19     28   dur  1200 seed            5 
+hard soft     19     28   dur  1200 seed            5 
+hard soft     19     28   dur  1200 seed            5 
+hard soft     19     28   dur  1200 seed            5 
+hard soft     17     32   dur  1200 seed            5 
+hard soft     15     32   dur  1200 seed            5 
+hard soft     16     27   dur  1200 seed            3 
+hard soft     16     27   dur  1200 seed            3 
+hard soft     16     27   dur  1200 seed            3 
+hard soft      2     10   dur  1200 seed            3 
+hard soft      0      4   dur  1200 seed            3 
+hard soft      0      4   dur  1200 seed            3 
+hard soft      5     12   dur  1200 seed            0 
