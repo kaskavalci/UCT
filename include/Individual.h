@@ -16,49 +16,30 @@ namespace std {
 class Individual {
 public:
 	Individual(Common *conf);
-	//virtual ~Individual();
+	Individual& operator= (Individual &target);
+	Individual(const Individual&);
+	virtual ~Individual();
 
-	void clear_conflv();
 	void mutate();
 	void mutateg1();
 	void mutateg3();
 	void mutateg5();
-	void mutatehg1();
-	void mutatehg3();
-	void mutatehg5();
 	void hc1();
-	void hc122();
-	void hc2();
-	void hc1g();
-	void hc12g();
-	void hc2g();
-	void mutatehc1(int, int);
+
 	bool equalsh(Individual&, Individual&);
 	bool equalss(Individual&, Individual&);
-	void mutate2(int, int);
+
 	void cross(Individual&, Individual&, Individual&, Individual&);
-	void cross2(Individual&, Individual&, Individual&, Individual&);
-	void cross3(Individual&, Individual&, Individual&, Individual&);
 	int fitnessHCAL(int);
 	int fitnessFCAL(int);
 	int fitnessF1CAL(int);
 	int fitnessF2CAL(int);
 	int fitnessF3CAL(int);
-	int decode(int);
-	void copyindividual(Individual&, Individual&);
-	int dominates(Individual&, Individual&);
+	int dominates(Individual *target);
 	void buildtimetable();
-	void buildtimetableold();
 	void printtable();
 	void printlect();
-	void printtt();
 	void printdekanlik();
-	void printjava();
-	void writeind();
-	void writetime();
-	void readtime();
-	void readind();
-	int getc2idx(int);
 
 	int fitnessh;
 	int fitnessh1;
@@ -70,18 +51,18 @@ public:
 
 private:
 	int findcourse(int sem, int dy, int slt);
+	int decode(int);
+	void mutatehc1(int, int);
+
 	int chrom_length;
-	int *chrom;
-	int *day;
-	int *slot;
-	int **timetable1;
-	int **timetable2;
+	int chrom[CHROML];
+	int day[CHROML];
+	int slot[CHROML];
+	int timetable1[5][4], timetable2[5][4];
 	int no_colors;
 	int no_periods;
 	int c2cnt;
 	vector<int> conflv;
-	vector<int> conflvh;
-	vector<int> conflvf;
 	FILE*errf;
 
 

@@ -18,24 +18,20 @@ class Population {
 public:
 	Population(Common *conf);
 	virtual ~Population();
-	void print();
-	void crossmut3();
-	void hillclimbmix2();
-	void init();
-	int findmin();
-	int findmax();
-	void initpareto();
-	bool foundinpar(int);
-	void nextgen(Individual[]);
-	void nextgenold(Individual&);
-	void selection2(Individual&, Individual&);
-	void selection3(Individual&, Individual&);
-	void selection(Individual&, Individual&);
+
 	void run(int seed);
 
 private:
-	time_t start;
 	double getduration();
+	void crossmut3();
+	void hillclimbmix2();
+	void init();
+	void initpareto();
+	bool foundinpar(int);
+	void nextgen(Individual[]);
+	void selection(Individual&, Individual&);
+
+	time_t start;
 	int inpf3[POPUL];
 	vector<int> paretof;
 	Common *conf;

@@ -18,8 +18,7 @@ public:
 	string lname;
 	int semid;
 	int hours;
-	int c2, c2day, c2slot;
-	Course*nextc;
+	int has_constraint, c2day, c2slot;
 };
 
 } /* namespace std */

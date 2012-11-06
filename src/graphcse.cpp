@@ -29,12 +29,15 @@ int main(int argc, char*argv[]) {
 	reader.readinputparam();
 	reader.readcourses();
 	reader.readreq();
+	reader.readContrictions("constcse.txt");
+
 	fprintf(tstf, "CHROML %d POPUL %d NUMX %d NMUT %d \n", CHROML, POPUL, NUMX,
 			NMUT);
 	unsigned long seed;
 	seed = atoi(argv[1]);
 	srand(seed);
 	Population popn(&conf);
+	popn.run(seed);
 
 	/*printf("hello\n");
 	 for (i = 0; i < lectures.size(); i++) {
@@ -43,8 +46,6 @@ int main(int argc, char*argv[]) {
 	 lectures[i].lab2, lectures[i].lab3);
 	 }*/
 
-	reader.readContrictions("constcse.txt");
-	popn.run(seed);
 
 	fclose(tstf);
 	return 0;

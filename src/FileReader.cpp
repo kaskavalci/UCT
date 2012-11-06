@@ -46,6 +46,7 @@ void FileReader::readreq() {
 	fclose(input);
 }
 void FileReader::readcourses() {
+	//todo: cpp lib'e çevir. veri yapýsýndaki sýðýrlýðý düzelt.
 	FILE*input;
 	char cnm[20], lnm[20];
 	int c2day, c2slot;
@@ -54,10 +55,9 @@ void FileReader::readcourses() {
 	for (i = 0; i < CHROML; i++) {
 		conf->courmat[i].semid = -1;
 		conf->courmat[i].hours = -1;
-		conf->courmat[i].c2 = -1;
+		conf->courmat[i].has_constraint = -1;
 		conf->courmat[i].c2day = -1;
 		conf->courmat[i].c2day = -1;
-		conf->courmat[i].nextc = 0;
 	}
 	while (!feof(input)) {
 		fscanf(input, "%s", cnm);
@@ -74,7 +74,7 @@ void FileReader::readcourses() {
 			fscanf(input, "%d\n", &c2slot);
 			for (j = 0; j < CHROML; j++) {
 				if (conf->courmat[j].cname == lnm) {
-					conf->courmat[j].c2 = 1;
+					conf->courmat[j].has_constraint = 1;
 					conf->courmat[j].c2day = c2day;
 					conf->courmat[j].c2slot = c2slot;
 				}
@@ -222,7 +222,8 @@ void FileReader::readContrictions(const char *fname)
 	while (!input.eof()) {
 		input >> inode >> nnode;
 		conf->confmat[inode - 1][nnode - 1] = 1;
-		cout << "FIND " << inode << nnode << endl;
+		//cout << "FIND " << inode << nnode << endl;
 	}
+	input.close();
 }
 } /* namespace std */

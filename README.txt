@@ -38,8 +38,11 @@ INPUT FILES
 1)phy101.01.2             p1      1       2
 2)C2        phy101.01.2        0       0
 
-In the first line lecture phys101 is a 2-hour session given by lecturer p1.
-1 denotes the semester number in this line. In the second line this course should be scheduled on day 0 timeslot 0.
+Course Name - Lecturer - Semester # - Hours of Course
+First line denotes Course name is given by lecturer p1 at semester 1 and course have 2 hours.
+
+C2 (fixed attribute) -  Day - Timeslot
+Second line denotes that lecture should be scheduled on day 0 and timeslot 0.
 
 ********************* inputparam.txt ***********
 
