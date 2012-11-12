@@ -19,6 +19,21 @@
 	void readtime();
 	
 	int findmin();
+	
+void Individual::cross(Individual&p1, Individual&p2, Individual&ch1, Individual&ch2) {
+	int pos, i;
+	pos = RND(CHROML);
+	for (i = 0; i < pos; i++) {
+		//copy p1's ith slot to ch1's ith slot. and so forth
+		ch1.chromosome->update(i, p1.chromosome->get_slot(i));
+		ch2.chromosome->update(i, p2.chromosome->get_slot(i));
+	}
+	for (i = pos; i < CHROML; i++) {
+		ch1.chromosome->update(i, p2.chromosome->get_slot(i));
+		ch2.chromosome->update(i, p1.chromosome->get_slot(i));
+	}
+}
+
 int Population::findmin() {
 	int max, maxi, i;
 	maxi = -1;

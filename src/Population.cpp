@@ -10,6 +10,7 @@
 #include <iostream>
 #include <time.h>
 #include <stdio.h>
+#include "Mutation.h"
 
 namespace std {
 
@@ -34,7 +35,8 @@ Population::~Population() {
 }
 
 void Population::crossmut3() {
-	Individual parent1(conf), parent2(conf), child1(conf), child2(conf);
+	Individual parent1(conf), parent2(conf), child1(conf);
+	Mutation mutator(conf);
 	int i;
 	int crossrate = (int) (POPUL * conf->crrate / 2);
 	for (i = 0; i < POPUL; i++) {
@@ -43,15 +45,13 @@ void Population::crossmut3() {
 	for (i = 0; i < crossrate; i++) {
 		//todo: selection olayýný hallet
 		selection(parent1, parent2);
-		child1.cross(parent1, parent2, child1, child2);
+		child1.cross(parent1, parent2, child1);
+		//todo: change it with worst element
 		ch[crossel1] = child1;
-		ch[crossel2] = child2;
 	}
 	for (i = 0; i < POPUL; i++) {
-		ch[i].mutate();
-		ch[i].mutateg1();
-		ch[i].mutateg3();
-		ch[i].mutateg5();
+		mutator.setChromosome(ch[i].getChromosome());
+		mutator.mutate_all();
 		ch[i].buildtimetable();
 		ch[i].fitnessHCAL(0);
 		ch[i].fitnessFCAL(0);
@@ -65,11 +65,8 @@ void Population::crossmut3() {
 			continue;
 		if (ch[i].dominates(&pop[i]) == 1 && !(ch[i].equalsh(ch[i], pop[i]) && ch[i].equalss(ch[i], pop[i])))
 			pop[i] = ch[i];
-		else if ((ch[i].fitnessh + ch[i].fitnessh1 + ch[i].fitnessh2
-				< pop[i].fitnessh + pop[i].fitnessh1 + pop[i].fitnessh2)\
-
-				&& (ch[i].fitnessf + ch[i].fitnessf1 + ch[i].fitnessf2 + ch[i].fitnessf3
-						< pop[i].fitnessf + pop[i].fitnessf1 + pop[i].fitnessf2 + pop[i].fitnessf3))
+		else if ((ch[i].fitnessh + ch[i].fitnessh1 < pop[i].fitnessh + pop[i].fitnessh1)
+				&& (ch[i].fitnessf + ch[i].fitnessf2 < pop[i].fitnessf + pop[i].fitnessf2))
 			pop[i] = ch[i];
 	}
 	for (i = 0; i < POPUL; i++) {
@@ -182,7 +179,7 @@ void Population::initpareto() {
 				break;
 			}
 		}
-		if (domination == 0) {
+		if (domination == 0 && paretof.size() < 2 * POPUL / 3) {
 			inpf3[i] = 1;
 			paretof.push_back(i);
 		}
@@ -200,7 +197,7 @@ void Population::run(int seed) {
 	int it = 0;
 	int smallest = 20000, smallestidx = -1;
 	int prevtime = 10;
-	double duration;
+	double duration = getduration();
 	int fit;
 	size_t m;
 	FILE*resf = fopen("result.txt", "a");
@@ -212,37 +209,28 @@ void Population::run(int seed) {
 		duration = getduration();
 		if ((int) duration % 10 == 0 && prevtime == (int) duration) {
 			prevtime = prevtime + 10;
-			/*fprintf(tstf, "%d\t%.0lf\t%d\n", it, duration,
-			 pop[paretof[0]].fitnessh
-			 + pop[paretof[0]].fitnessf
-			 + pop[paretof[0]].fitnessf1
-			 + pop[paretof[0]].fitnessf2
-			 + pop[paretof[0]].fitnessf3);*/
 		}
-		int fit2, fit3, fit4, fit5, fith1, fith2, fith0;
+		int fit2, fit4, fith1, fith0;
 		smallest = 20000;
 		smallestidx = -1;
 		int fit6 = 20000;
 		if (it % 20 == 0) {
 			for (m = 0; m < paretof.size(); m++) {
-				fit = pop[paretof[m]].fitnessh + pop[paretof[m]].fitnessh1 + pop[paretof[m]].fitnessh2;
+				fit = pop[paretof[m]].fitnessh + pop[paretof[m]].fitnessh1;
 				fith0 = pop[paretof[m]].fitnessh;
 				fith1 = pop[paretof[m]].fitnessh1;
-				fith2 = pop[paretof[m]].fitnessh2;
 				fit2 = pop[paretof[m]].fitnessf;
-				fit3 = pop[paretof[m]].fitnessf1;
 				fit4 = pop[paretof[m]].fitnessf2;
-				fit5 = pop[paretof[m]].fitnessf3;
-				printf("fitness---- %d --------%d--  %d-- %d-- %d -- %d -- %d -- %d \n", m, fith0, fith1,
-						fith2, fit2, fit3, fit4, fit5);
+				printf("fitness: %d \tfith: %d\tfith1: %d \tfitf: %d \tfitf1: %d\n", m, fith0, fith1, fit2,
+						fit4);
 				if (fit < smallest) {
 					smallest = fit;
 					smallestidx = m;
-					fit6 = fit + fit2 + fit3 + fit4 + fit5;
-				} else if (fit <= smallest && fit + fit2 + fit3 + fit4 + fit5 < fit6) {
+					fit6 = fit + fit2 + fit4;
+				} else if (fit <= smallest && fit + fit2 + fit4 < fit6) {
 					smallest = fit;
 					smallestidx = m;
-					fit6 = fit + fit2 + fit3 + fit4 + fit5;
+					fit6 = fit + fit2 + fit4;
 				}
 			}
 			printf("# of iterations %d duration %d\n", it, (int) duration);
@@ -253,24 +241,22 @@ void Population::run(int seed) {
 	}
 	int drr = 1200;
 
-	int fit2, fit3, fit4, fit5, fit6 = 20000;
+	int fit2, fit4, fit6 = 20000;
 	fit6 = 20000;
 	for (m = 0; m < paretof.size(); m++) {
-		fit = pop[paretof[m]].fitnessh + pop[paretof[m]].fitnessh1 + pop[paretof[m]].fitnessh2;
+		fit = pop[paretof[m]].fitnessh + pop[paretof[m]].fitnessh1;
 		fit2 = pop[paretof[m]].fitnessf;
-		fit3 = pop[paretof[m]].fitnessf1;
 		fit4 = pop[paretof[m]].fitnessf2;
-		fit5 = pop[paretof[m]].fitnessf3;
-		printf("fitness---- %d --------  %d-- %d-- %d -- %d -- %d -- %d \n", m, fit, fit2, fit3, fit4, fit5,
-				fit + fit2 + fit3 + fit4 + fit5);
+		printf("fitness: %d \tfith Total: %d\tfitf1: %d\tfitf2: %d\tAll:: %d\n", m, fit, fit2, fit4,
+				fit + fit2 + fit4);
 		if (fit < smallest) {
 			smallest = fit;
 			smallestidx = m;
-			fit6 = fit + fit2 + fit3 + fit4 + fit5;
-		} else if (fit <= smallest && fit + fit2 + fit3 + fit4 + fit5 < fit6) {
+			fit6 = fit + fit2 + fit4;
+		} else if (fit <= smallest && fit + fit2 + fit4 < fit6) {
 			smallest = fit;
 			smallestidx = m;
-			fit6 = fit + fit2 + fit3 + fit4 + fit5;
+			fit6 = fit + fit2 + fit4;
 		}
 	}
 	printf("# of iterations %d duration %d\n", it, (int) duration);
@@ -296,14 +282,9 @@ void Population::run(int seed) {
 		fit = pop[paretof[m]].fitnessF3CAL(1);
 	}
 	fprintf(resf, "hard soft  %5d  %5d   dur %5d seed %12d \n", pop[paretof[smallestidx]].fitnessh,
-			pop[paretof[smallestidx]].fitnessf + pop[paretof[smallestidx]].fitnessf1
-					+ pop[paretof[smallestidx]].fitnessf2 + pop[paretof[smallestidx]].fitnessf3, drr, seed);
-	fprintf(poprh, "%5d \n",
-			pop[paretof[smallestidx]].fitnessh + pop[paretof[smallestidx]].fitnessh1
-					+ pop[paretof[smallestidx]].fitnessh2);
-	fprintf(poprs, "%5d \n",
-			pop[paretof[smallestidx]].fitnessf + pop[paretof[smallestidx]].fitnessf1
-					+ pop[paretof[smallestidx]].fitnessf2);
+			pop[paretof[smallestidx]].fitnessf + pop[paretof[smallestidx]].fitnessf2, drr, seed);
+	fprintf(poprh, "%5d \n", pop[paretof[smallestidx]].fitnessh + pop[paretof[smallestidx]].fitnessh1);
+	fprintf(poprs, "%5d \n", pop[paretof[smallestidx]].fitnessf + pop[paretof[smallestidx]].fitnessf2);
 	duration = getduration();
 	printf("\n\nThe operation completed in %.2lf seconds.\n", duration);
 	fclose(poprh);

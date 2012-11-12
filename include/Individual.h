@@ -10,26 +10,23 @@
 
 #include "Common.h"
 #include "Course.h"
+#include "Chromosome.h"
 
 namespace std {
 
 class Individual {
 public:
 	Individual(Common *conf);
-	Individual& operator= (Individual &target);
+	Individual& operator= (const Individual &source);
 	Individual(const Individual&);
 	virtual ~Individual();
 
-	void mutate();
-	void mutateg1();
-	void mutateg3();
-	void mutateg5();
 	void hc1();
 
 	bool equalsh(Individual&, Individual&);
 	bool equalss(Individual&, Individual&);
 
-	void cross(Individual&, Individual&, Individual&, Individual&);
+	void cross(Individual&, Individual&, Individual&);
 	int fitnessHCAL(int);
 	int fitnessFCAL(int);
 	int fitnessF1CAL(int);
@@ -40,28 +37,22 @@ public:
 	void printtable();
 	void printlect();
 	void printdekanlik();
+	Chromosome* getChromosome();
 
 	int fitnessh;
 	int fitnessh1;
-	int fitnessh2;
 	int fitnessf;
-	int fitnessf1;
 	int fitnessf2;
-	int fitnessf3;
 
 private:
 	int findcourse(int sem, int dy, int slt);
 	int decode(int);
-	void mutatehc1(int, int);
 
+	Chromosome *chromosome;
 	int chrom_length;
-	int chrom[CHROML];
-	int day[CHROML];
-	int slot[CHROML];
 	int timetable1[5][4], timetable2[5][4];
 	int no_colors;
 	int no_periods;
-	int c2cnt;
 	vector<int> conflv;
 	FILE*errf;
 

@@ -25,7 +25,6 @@ private:
 	double getduration();
 	void crossmut3();
 	void hillclimbmix2();
-	void init();
 	void initpareto();
 	bool foundinpar(int);
 	void nextgen(Individual[]);

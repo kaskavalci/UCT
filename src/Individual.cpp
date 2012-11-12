@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "FileReader.h"
+#include <list>
 
 namespace std {
 
@@ -19,30 +20,24 @@ Individual::Individual(Common *conf) {
 
 	this->conf = conf;
 	chrom_length = CHROML;
-
 	no_colors = NCOL;
 	no_periods = 4;
+	chromosome = new Chromosome(chrom_length, no_colors);
+
 	fitnessh = 0;
 	fitnessh1 = 0;
-	fitnessh2 = 0;
 	fitnessf = 0;
-	fitnessf1 = 0;
 	fitnessf2 = 0;
-	fitnessf3 = 0;
 	errf = fopen("errors.txt", "a");
 
 	for (i = 0; i < CHROML; i++) {
-		day[i] = -1;
-		slot[i] = -1;
-		chrom[i] = RND(NCOL);
-	}
-	for (j = 0; j < CHROML; j++) {
-		if (conf->courmat[j].has_constraint == 1) {
-			chrom[j] = cnt % NCOL;
+		if (conf->courmat[i].has_constraint == 1) {
+			chromosome->add(i, cnt % NCOL);
 			cnt++;
+		} else {
+			chromosome->add(i, RND(NCOL));
 		}
 	}
-	c2cnt = cnt;
 	for (i = 0; i < 5; i++) {
 		for (j = 0; j < 4; j++) {
 			timetable1[i][j] = -1;
@@ -55,7 +50,8 @@ Individual::Individual(Common *conf) {
 					&& (conf->courmat[j].has_constraint == 1)
 					&& (conf->courmat[i].c2day == conf->courmat[j].c2day
 							&& conf->courmat[i].c2slot == conf->courmat[j].c2slot)) {
-				chrom[j] = chrom[i];
+				//assign i's slot to j's.
+				chromosome->update(j, chromosome->get_slot(i));
 			}
 		}
 	}
@@ -66,10 +62,9 @@ Individual::Individual(Common *conf) {
 	fitnessF3CAL(0);
 }
 
- Individual::~Individual() {
-	 fclose(errf);
- }
-
+Individual::~Individual() {
+	fclose(errf);
+}
 
 Individual::Individual(const Individual& source) {
 	int i;
@@ -79,135 +74,37 @@ Individual::Individual(const Individual& source) {
 			this->timetable2[i][k] = source.timetable2[i][k];
 		}
 	}
-	for (i = 0; i < CHROML; i++) {
-		day[i] = -1;
-		slot[i] = -1;
-		chrom[i] = RND(NCOL);
-	}
+	this->chromosome = source.chromosome;
 	this->errf = source.errf;
 	this->chrom_length = source.chrom_length;
 	this->conf = source.conf;
-	this->c2cnt = source.c2cnt;
 	this->no_periods = source.no_periods;
 	this->no_colors = source.no_colors;
 	this->fitnessh = source.fitnessh;
 	this->fitnessh1 = source.fitnessh1;
-	this->fitnessh2 = source.fitnessh2;
 	this->fitnessf = source.fitnessf;
-	this->fitnessf1 = source.fitnessf1;
 	this->fitnessf2 = source.fitnessf2;
-	this->fitnessf3 = source.fitnessf3;
 }
 
-Individual &Individual::operator=(Individual &source) {
-	int i, j, k;
-	for (i = 0; i < CHROML; i++) {
-		this->chrom[i] = source.chrom[i];
-		this->day[i] = source.day[i];
-		this->slot[i] = source.slot[i];
-	}
+Individual &Individual::operator=(const Individual &source) {
+	int j, k;
 	for (j = 0; j < 5; j++) {
 		for (k = 0; k < 4; k++) {
 			this->timetable1[j][k] = source.timetable1[j][k];
 			this->timetable2[j][k] = source.timetable2[j][k];
 		}
 	}
+	this->chromosome = source.chromosome;
 	this->fitnessh = source.fitnessh;
 	this->fitnessh1 = source.fitnessh1;
-	this->fitnessh2 = source.fitnessh2;
 	this->fitnessf = source.fitnessf;
-	this->fitnessf1 = source.fitnessf1;
 	this->fitnessf2 = source.fitnessf2;
-	this->fitnessf3 = source.fitnessf3;
 	return *this;
 }
 
-void Individual::mutateg5() {
-	int i, sel, k;
-	int pos1, pos2, pos3;
-	int val1, val2, val3;
-	for (k = 0; k < chrom_length; k++) {
-		if (RND(1000000) > 1000000 * conf->mutg5rate)
-			continue;
-		pos1 = k;
-		pos2 = RND(chrom_length);
-		while (pos1 == pos2) {
-			pos2 = RND(POPUL);
-		}
-		pos3 = RND(chrom_length);
-		while (pos3 == pos2 || pos3 == pos1) {
-			pos3 = RND(POPUL);
-		}
-		val1 = chrom[pos1];
-		val2 = chrom[pos2];
-		val3 = chrom[pos3];
-		for (i = 0; i < chrom_length; i++) {
-			sel = RND(2);
-			if (chrom[i] == val3 && sel == 0 && RND(100) < 50) {
-				chrom[i] = val1;
-				day[i] = chrom[i] / no_periods;
-				slot[i] = chrom[i] % no_periods;
-			} else if (chrom[i] == val3 && sel == 1 && RND(100) < 50) {
-				chrom[i] = val2;
-				day[i] = chrom[i] / no_periods;
-				slot[i] = chrom[i] % no_periods;
-			}
-		}
-	}
-}
-
-void Individual::mutateg3() {
-	int i, k;
-	int pos1, pos2;
-	int val1, val2;
-	for (k = 0; k < chrom_length; k++) {
-		if (RND(1000000) > 1000000 * conf->mutg3rate)
-			continue;
-		pos1 = k;
-		pos2 = RND(chrom_length);
-		while (pos1 == pos2) {
-			pos2 = RND(POPUL);
-		}
-		val1 = chrom[pos1];
-		val2 = chrom[pos2];
-		for (i = 0; i < chrom_length; i++) {
-			if (chrom[i] == val1 && RND(100) < 50) {
-				chrom[i] = val2;
-				day[i] = chrom[i] / no_periods;
-				slot[i] = chrom[i] % no_periods;
-			}
-		}
-	}
-}
-void Individual::mutateg1() {
-	int col1, col2, i, k;
-	for (k = 0; k < chrom_length; k++) {
-		if (RND(1000000) > 1000000 * conf->mutg1rate)
-			continue;
-		col1 = chrom[k];
-		col2 = RND(no_colors);
-		for (i = 0; i < chrom_length; i++) {
-			if (chrom[i] == col1) {
-				chrom[i] = col2;
-				day[i] = chrom[i] / no_periods;
-				slot[i] = chrom[i] % no_periods;
-			} else if (chrom[i] == col2) {
-				chrom[i] = col1;
-				day[i] = chrom[i] / no_periods;
-				slot[i] = chrom[i] % no_periods;
-			}
-		}
-	}
-}
-
-void Individual::mutatehc1(int pos, int val) {
-	chrom[pos] = val;
-	day[pos] = chrom[pos] / no_periods;
-	slot[pos] = chrom[pos] % no_periods;
-}
 bool Individual::equalsh(Individual&in1, Individual&in2) {
 	if (in1.fitnessh == in2.fitnessh\
- && in1.fitnessh1 == in2.fitnessh1 && in1.fitnessh2 == in2.fitnessh2)
+ && in1.fitnessh1 == in2.fitnessh1)
 		return true;
 	return false;
 }
@@ -225,15 +122,14 @@ void Individual::hc1() {
 
 	for (selcolor = 0; selcolor < no_colors; selcolor++) {
 		//mutate the child's gene for every color except for its own
-		if (hcchild.chrom[rndidx] == selcolor)
+		//todo: error prone
+		if (hcchild.chromosome->get_slot(rndidx) == selcolor)
 			continue;
-		hcchild.mutatehc1(rndidx, selcolor);
+		chromosome->update(rndidx, selcolor);
 		hcchild.buildtimetable();
 
-		if ((hcchild.fitnessh + hcchild.fitnessh1 + hcchild.fitnessh2
-				< this->fitnessh + this->fitnessh1 + this->fitnessh2)
-				&& (hcchild.fitnessf + hcchild.fitnessf1 + hcchild.fitnessf2 + hcchild.fitnessf3
-						< this->fitnessf + this->fitnessf1 + this->fitnessf2 + this->fitnessf3)) {
+		if ((hcchild.fitnessh + hcchild.fitnessh1 < this->fitnessh + this->fitnessh1)
+				&& (hcchild.fitnessf + hcchild.fitnessf2 < this->fitnessf + this->fitnessf2)) {
 			*this = hcchild;
 		}
 	}
@@ -241,55 +137,53 @@ void Individual::hc1() {
 }
 
 bool Individual::equalss(Individual&in1, Individual&in2) {
-	if (in1.fitnessf == in2.fitnessf && in1.fitnessf1 == in2.fitnessf1\
- && in1.fitnessf2 == in2.fitnessf2
-			&& in1.fitnessf3 == in2.fitnessf3)
+	if (in1.fitnessf == in2.fitnessf && in1.fitnessf2 == in2.fitnessf2)
 		return true;
 	return false;
 }
 
-void Individual::mutate() {
-	int pos, val;
-	pos = RND(CHROML);
-	val = RND(NCOL);
-	if (conf->courmat[pos].has_constraint != 1) {
-		chrom[pos] = val;
-		day[pos] = chrom[pos] / 4;
-		slot[pos] = chrom[pos] % 4;
+void Individual::cross(Individual&p1, Individual&p2, Individual&ch1) {
+	bool checked[CHROML] = { };
+	Chromosome *chrom;
+	for (int i = 0; i < NCOL; ++i) {
+		if (p1.chromosome->slot_map[i].size() > p2.chromosome->slot_map[i].size()) {
+			chrom = p1.chromosome;
+		} else {
+			chrom = p2.chromosome;
+		}
+		for (list<int>::iterator it = chrom->slot_map[i].begin(); it != chrom->slot_map[i].end(); it++) {
+			if (checked[*it] == false) {
+				ch1.chromosome->add(*it, i);
+				checked[*it] = true;
+			}
+		}
 	}
-}
-
-void Individual::cross(Individual&p1, Individual&p2, Individual&ch1, Individual&ch2) {
-	int pos, i;
-	pos = RND(CHROML);
-	for (i = 0; i < pos; i++) {
-		ch1.chrom[i] = p1.chrom[i];
-		ch2.chrom[i] = p2.chrom[i];
-	}
-	for (i = pos; i < CHROML; i++) {
-		ch1.chrom[i] = p2.chrom[i];
-		ch2.chrom[i] = p1.chrom[i];
+	//we copied the largest sets from p1 and p2. but there might have chromosomes haven't copied yet. Randomize them.
+	for (int i = 0; i < CHROML; ++i) {
+		if (checked[i] == false) {
+			ch1.chromosome->add(i, RND(NCOL));
+		}
 	}
 }
 
 int Individual::dominates(Individual *target) {
 	if (this->fitnessh <= target->fitnessh && this->fitnessh1 <= target->fitnessh1
-			&& this->fitnessh2 <= target->fitnessh2 && this->fitnessf <= target->fitnessf
-			&& this->fitnessf1 <= target->fitnessf1 && this->fitnessf2 <= target->fitnessf2
-			&& this->fitnessf3 <= target->fitnessf3)
+			&& this->fitnessf <= target->fitnessf && this->fitnessf2 <= target->fitnessf2)
 		return 1;
 	if (target->fitnessh <= this->fitnessh && target->fitnessh1 <= this->fitnessh1
-			&& target->fitnessh2 <= this->fitnessh2 && target->fitnessf <= this->fitnessf
-			&& target->fitnessf1 <= this->fitnessf1 && target->fitnessf2 <= this->fitnessf2
-			&& target->fitnessf3 <= this->fitnessf3)
+			&& target->fitnessf <= this->fitnessf && target->fitnessf2 <= this->fitnessf2)
 		return 2;
 	return 0;
+}
+
+Chromosome* Individual::getChromosome() {
+	return chromosome;
 }
 
 int Individual::decode(int cidx) {
 	int rslot = -1, rval = -1;
 	if (conf->courmat[cidx].hours == 1) {
-		switch (slot[cidx]) {
+		switch (chromosome->slot[cidx]) {
 		case 0:
 			rslot = 2;
 			break;
@@ -304,7 +198,7 @@ int Individual::decode(int cidx) {
 			break;
 		}
 	} else {
-		switch (slot[cidx]) {
+		switch (chromosome->slot[cidx]) {
 		case 0:
 			rslot = 0;
 			break;
@@ -319,7 +213,7 @@ int Individual::decode(int cidx) {
 			break;
 		}
 	}
-	rval = 10 * day[cidx] + rslot;
+	rval = 10 * chromosome->day[cidx] + rslot;
 	return rval;
 }
 void Individual::printlect() {
@@ -334,38 +228,38 @@ void Individual::printlect() {
 		for (m = 0; m < CHROML; m++) {
 			if (conf->lecturers[h] == conf->courmat[m].lname) {
 				if (conf->courmat[m].hours == 1) {
-					switch (slot[m]) {
+					switch (chromosome->slot[m]) {
 					case 0:
-						lectmatrix[day[m]][2] = 1;
+						lectmatrix[chromosome->day[m]][2] = 1;
 						break;
 					case 1:
-						lectmatrix[day[m]][3] = 1;
+						lectmatrix[chromosome->day[m]][3] = 1;
 						break;
 					case 2:
-						lectmatrix[day[m]][4] = 1;
+						lectmatrix[chromosome->day[m]][4] = 1;
 						break;
 					case 3:
-						lectmatrix[day[m]][9] = 1;
+						lectmatrix[chromosome->day[m]][9] = 1;
 						break;
 					}
 				}
 				if (conf->courmat[m].hours == 2) {
-					switch (slot[m]) {
+					switch (chromosome->slot[m]) {
 					case 0:
-						lectmatrix[day[m]][0] = 1;
-						lectmatrix[day[m]][1] = 1;
+						lectmatrix[chromosome->day[m]][0] = 1;
+						lectmatrix[chromosome->day[m]][1] = 1;
 						break;
 					case 1:
-						lectmatrix[day[m]][2] = 1;
-						lectmatrix[day[m]][3] = 1;
+						lectmatrix[chromosome->day[m]][2] = 1;
+						lectmatrix[chromosome->day[m]][3] = 1;
 						break;
 					case 2:
-						lectmatrix[day[m]][5] = 1;
-						lectmatrix[day[m]][6] = 1;
+						lectmatrix[chromosome->day[m]][5] = 1;
+						lectmatrix[chromosome->day[m]][6] = 1;
 						break;
 					case 3:
-						lectmatrix[day[m]][7] = 1;
-						lectmatrix[day[m]][8] = 1;
+						lectmatrix[chromosome->day[m]][7] = 1;
+						lectmatrix[chromosome->day[m]][8] = 1;
 						break;
 					}
 				}
@@ -392,9 +286,10 @@ int Individual::fitnessFCAL(int prnt) {
 	size_t i, h;
 	for (i = 0; i < CHROML; i++) {
 		//Department meeting conflict
-		if (((conf->cse[i] == 1 && day[i] == 3 && (slot[i] == 2) && conf->courmat[i].hours == 2)
-				|| (conf->cse[i] == 1 && day[i] == 3 && (slot[i] == 2) && conf->courmat[i].hours == 1))
-				&& conf->courmat[i].cname.substr(0, 8) != "cse211.L"
+		if (((conf->cse[i] == 1 && chromosome->day[i] == 3 && (chromosome->slot[i] == 2)
+				&& conf->courmat[i].hours == 2)
+				|| (conf->cse[i] == 1 && chromosome->day[i] == 3 && (chromosome->slot[i] == 2)
+						&& conf->courmat[i].hours == 1)) && conf->courmat[i].cname.substr(0, 8) != "cse211.L"
 				&& conf->courmat[i].cname.substr(0, 8) != "cse112.L") {
 			cnt = cnt + 1;
 			if (prnt == 1) {
@@ -417,7 +312,8 @@ int Individual::fitnessFCAL(int prnt) {
 							&& (conf->courmat[j].cname.substr(0, 6) == "cse221"
 									|| conf->courmat[j].cname.substr(0, 6) == "cse421"
 									|| conf->courmat[j].cname.substr(0, 6) == "cse232"))
-							&& (day[i] == day[j] && slot[i] == slot[j]))) {
+							&& (chromosome->day[i] == chromosome->day[j]
+									&& chromosome->slot[i] == chromosome->slot[j]))) {
 				cnt = cnt + 1;
 				if (prnt == 1) {
 					tmperr.desc = " 16 Hardware Labs      ";
@@ -444,38 +340,38 @@ int Individual::fitnessFCAL(int prnt) {
 		for (m = 0; m < CHROML; m++) {
 			if (conf->lecturers[h] == conf->courmat[m].lname) {
 				if (conf->courmat[m].hours == 1) {
-					switch (slot[m]) {
+					switch (chromosome->slot[m]) {
 					case 0:
-						lectmatrix[day[m]][2] = 1;
+						lectmatrix[chromosome->day[m]][2] = 1;
 						break;
 					case 1:
-						lectmatrix[day[m]][3] = 1;
+						lectmatrix[chromosome->day[m]][3] = 1;
 						break;
 					case 2:
-						lectmatrix[day[m]][4] = 1;
+						lectmatrix[chromosome->day[m]][4] = 1;
 						break;
 					case 3:
-						lectmatrix[day[m]][9] = 1;
+						lectmatrix[chromosome->day[m]][9] = 1;
 						break;
 					}
 				}
 				if (conf->courmat[m].hours == 2) {
-					switch (slot[m]) {
+					switch (chromosome->slot[m]) {
 					case 0:
-						lectmatrix[day[m]][0] = 1;
-						lectmatrix[day[m]][1] = 1;
+						lectmatrix[chromosome->day[m]][0] = 1;
+						lectmatrix[chromosome->day[m]][1] = 1;
 						break;
 					case 1:
-						lectmatrix[day[m]][2] = 1;
-						lectmatrix[day[m]][3] = 1;
+						lectmatrix[chromosome->day[m]][2] = 1;
+						lectmatrix[chromosome->day[m]][3] = 1;
 						break;
 					case 2:
-						lectmatrix[day[m]][5] = 1;
-						lectmatrix[day[m]][6] = 1;
+						lectmatrix[chromosome->day[m]][5] = 1;
+						lectmatrix[chromosome->day[m]][6] = 1;
 						break;
 					case 3:
-						lectmatrix[day[m]][7] = 1;
-						lectmatrix[day[m]][8] = 1;
+						lectmatrix[chromosome->day[m]][7] = 1;
+						lectmatrix[chromosome->day[m]][8] = 1;
 						break;
 					}
 				}
@@ -589,15 +485,15 @@ int Individual::fitnessF3CAL(int prnt) {
 	}
 	for (m = 0; m < 8; m++) {
 		for (i = 0; i < CHROML; i++) {
-			if (conf->courmat[i].semid == m + 1 && conf->courmat[i].hours == 1 && slot[i] == 0)
-				lunch[m][day[i]][0] = 1;
-			if (conf->courmat[i].semid == m + 1 && conf->courmat[i].hours == 1 && slot[i] == 1)
-				lunch[m][day[i]][1] = 1;
-			if (conf->courmat[i].semid == m + 1 && conf->courmat[i].hours == 1 && slot[i] == 2)
-				lunch[m][day[i]][2] = 1;
-			if (conf->courmat[i].semid == m + 1 && conf->courmat[i].hours == 2 && slot[i] == 1) {
-				lunch[m][day[i]][0] = 1;
-				lunch[m][day[i]][1] = 1;
+			if (conf->courmat[i].semid == m + 1 && conf->courmat[i].hours == 1 && chromosome->slot[i] == 0)
+				lunch[m][chromosome->day[i]][0] = 1;
+			if (conf->courmat[i].semid == m + 1 && conf->courmat[i].hours == 1 && chromosome->slot[i] == 1)
+				lunch[m][chromosome->day[i]][1] = 1;
+			if (conf->courmat[i].semid == m + 1 && conf->courmat[i].hours == 1 && chromosome->slot[i] == 2)
+				lunch[m][chromosome->day[i]][2] = 1;
+			if (conf->courmat[i].semid == m + 1 && conf->courmat[i].hours == 2 && chromosome->slot[i] == 1) {
+				lunch[m][chromosome->day[i]][0] = 1;
+				lunch[m][chromosome->day[i]][1] = 1;
 			}
 		}
 	}
@@ -617,7 +513,7 @@ int Individual::fitnessF3CAL(int prnt) {
 		}
 	}
 	for (i = 0; i < CHROML; i++) {
-		if (conf->courmat[i].hours == 1 && slot[i] == 3) {
+		if (conf->courmat[i].hours == 1 && chromosome->slot[i] == 3) {
 			cnt = cnt + 1;
 			if (prnt == 1) {
 				tmperr.desc = " 5 Evening Lecture    ";
@@ -629,7 +525,7 @@ int Individual::fitnessF3CAL(int prnt) {
 				conflv.push_back(i);
 			}
 		}
-		if (conf->courmat[i].cname.size() > 8 && conf->lab[i] == 1 && slot[i] == 0
+		if (conf->courmat[i].cname.size() > 8 && conf->lab[i] == 1 && chromosome->slot[i] == 0
 				&& conf->courmat[i].hours == 2) {
 			cnt = cnt + 1;
 			if (prnt == 1) {
@@ -741,9 +637,9 @@ int Individual::fitnessF2CAL(int prnt) {
 	for (i = 0; i < CHROML; i++) {
 		for (j = 0; j < CHROML; j++) {
 			if (conf->prereq[i][j] == 0 && i != j && conf->courmat[i].semid == conf->courmat[j].semid + 1
-					&& conf->courmat[i].hours == conf->courmat[j].hours && day[i] == day[j]
-					&& slot[i] == slot[j] && conf->cse[i] == 1 && conf->cse[j] == 1 && conf->lab[i] != 1
-					&& conf->lab[j] != 1) {
+					&& conf->courmat[i].hours == conf->courmat[j].hours
+					&& chromosome->day[i] == chromosome->day[j] && chromosome->slot[i] == chromosome->slot[j]
+					&& conf->cse[i] == 1 && conf->cse[j] == 1 && conf->lab[i] != 1 && conf->lab[j] != 1) {
 				cnt = cnt + 1;
 				if (prnt == 1) {
 					tmperr.desc = " 4 Prev Sem Next Sem    ";
@@ -757,10 +653,10 @@ int Individual::fitnessF2CAL(int prnt) {
 				}
 			}
 			if (conf->prereq[i][j] == 0 && i != j && conf->courmat[i].semid == conf->courmat[j].semid + 1
-					&& conf->courmat[i].hours == 1 && conf->courmat[j].hours == 2 && day[i] == day[j]
-					&& (slot[i] == 0 || slot[i] == 1) && slot[j] == 1 && conf->cse[i] == 1\
-
-					&& conf->cse[j] == 1) {
+					&& conf->courmat[i].hours == 1 && conf->courmat[j].hours == 2
+					&& chromosome->day[i] == chromosome->day[j]
+					&& (chromosome->slot[i] == 0 || chromosome->slot[i] == 1) && chromosome->slot[j] == 1
+					&& conf->cse[i] == 1 && conf->cse[j] == 1) {
 				cnt = cnt + 1;
 				if (prnt == 1) {
 					tmperr.desc = " 4 Prev Sem Next Sem    ";
@@ -774,10 +670,10 @@ int Individual::fitnessF2CAL(int prnt) {
 				}
 			}
 			if (conf->prereq[i][j] == 0 && i != j && conf->courmat[i].semid == conf->courmat[j].semid + 1
-					&& conf->courmat[i].hours == 2 && conf->courmat[j].hours == 1 && day[i] == day[j]
-					&& (slot[j] == 0 || slot[j] == 1) && slot[i] == 1 && conf->cse[i] == 1\
-
-					&& conf->cse[j] == 1) {
+					&& conf->courmat[i].hours == 2 && conf->courmat[j].hours == 1
+					&& chromosome->day[i] == chromosome->day[j]
+					&& (chromosome->slot[j] == 0 || chromosome->slot[j] == 1) && chromosome->slot[i] == 1
+					&& conf->cse[i] == 1 && conf->cse[j] == 1) {
 				cnt = cnt + 1;
 				if (prnt == 1) {
 					tmperr.desc = " 4 Prev Sem Next Sem    ";
@@ -797,26 +693,26 @@ int Individual::fitnessF2CAL(int prnt) {
 		lidx = conf->findlecture(i);
 		if (lidx != -1) {
 			if (conf->courmat[i].cname.at(7) == '0' && conf->courmat[i].hours == 1) {
-				conf->lectures[lidx].cid1day = day[i];
-				conf->lectures[lidx].cid1slot = slot[i];
+				conf->lectures[lidx].cid1day = chromosome->day[i];
+				conf->lectures[lidx].cid1slot = chromosome->slot[i];
 			}
 			if (conf->courmat[i].cname.at(7) == '0' && conf->courmat[i].hours == 2) {
-				conf->lectures[lidx].cid2day = day[i];
-				conf->lectures[lidx].cid2slot = slot[i];
+				conf->lectures[lidx].cid2day = chromosome->day[i];
+				conf->lectures[lidx].cid2slot = chromosome->slot[i];
 			}
 			if (conf->courmat[i].cname.at(7) == 'L' && conf->courmat[i].cname.at(8) == '1'
 					&& conf->courmat[i].hours == 2) {
-				conf->lectures[lidx].lab1day = day[i];
-				conf->lectures[lidx].lab1slot = slot[i];
+				conf->lectures[lidx].lab1day = chromosome->day[i];
+				conf->lectures[lidx].lab1slot = chromosome->slot[i];
 			}
 			if (conf->courmat[i].cname.at(7) == 'L' && conf->courmat[i].cname.at(8) == '2'
 					&& conf->courmat[i].hours == 2) {
-				conf->lectures[lidx].lab2day = day[i];
-				conf->lectures[lidx].lab2slot = slot[i];
+				conf->lectures[lidx].lab2day = chromosome->day[i];
+				conf->lectures[lidx].lab2slot = chromosome->slot[i];
 			}
 			if (conf->courmat[i].cname.at(7) == 'L' && conf->courmat[i].hours == 1) {
-				conf->lectures[lidx].lab3day = day[i];
-				conf->lectures[lidx].lab3slot = slot[i];
+				conf->lectures[lidx].lab3day = chromosome->day[i];
+				conf->lectures[lidx].lab3slot = chromosome->slot[i];
 			}
 		}
 	}
@@ -939,14 +835,16 @@ int Individual::fitnessHCAL(int prnt) {
 	Errnode tmperr;
 	for (i = 0; i < CHROML; i++) {
 		for (j = i + 1; j < CHROML; j++) {
-			if ((i != j && conf->confmat[i][j] == 1 && chrom[i] == chrom[j]
+			if ((i != j && conf->confmat[i][j] == 1 && chromosome->get_slot(i) == chromosome->get_slot(j)
 					&& conf->courmat[i].hours == conf->courmat[j].hours)
 					|| (i != j && conf->confmat[i][j] == 1 && conf->courmat[i].hours != conf->courmat[j].hours
-							&& day[i] == day[j]
+							&& chromosome->day[i] == chromosome->day[j]
 							&& ((conf->courmat[i].hours == 1 && conf->courmat[j].hours == 2
-									&& (slot[i] == 0 || slot[i] == 1) && slot[j] == 1)
+									&& (chromosome->slot[i] == 0 || chromosome->slot[i] == 1)
+									&& chromosome->slot[j] == 1)
 									|| (conf->courmat[i].hours == 2 && conf->courmat[j].hours == 1
-											&& (slot[j] == 0 || slot[j] == 1) && slot[i] == 1)))) {
+											&& (chromosome->slot[j] == 0 || chromosome->slot[j] == 1)
+											&& chromosome->slot[i] == 1)))) {
 				cnt = cnt + 1;
 				if (prnt == 1) {
 					tmperr.desc = " 1 Confmat ";
@@ -959,7 +857,7 @@ int Individual::fitnessHCAL(int prnt) {
 					conflv.push_back(j);
 				}
 			}
-			if (i != j && day[i] == day[j] && conf->cid[i] == conf->cid[j]
+			if (i != j && chromosome->day[i] == chromosome->day[j] && conf->cid[i] == conf->cid[j]
 					&& conf->courmat[i].cname.substr(0, 8) != "cse211.L"
 					&& conf->courmat[i].cname.substr(0, 8) != "cse112.L") {
 				cnt = cnt + 1;
@@ -974,11 +872,14 @@ int Individual::fitnessHCAL(int prnt) {
 					conflv.push_back(j);
 				}
 			}
-			if (i != j && conf->courmat[i].semid == conf->courmat[j].semid && day[i] == day[j]
+			if (i != j && conf->courmat[i].semid == conf->courmat[j].semid
+					&& chromosome->day[i] == chromosome->day[j]
 					&& ((conf->courmat[i].hours == 1 && conf->courmat[j].hours == 2
-							&& (slot[i] == 0 || slot[i] == 1) && slot[j] == 1)
+							&& (chromosome->slot[i] == 0 || chromosome->slot[i] == 1)
+							&& chromosome->slot[j] == 1)
 							|| ((conf->courmat[i].hours == 2 && conf->courmat[j].hours == 1
-									&& ((slot[j] == 0 || slot[j] == 1) && slot[i] == 1))))) {
+									&& ((chromosome->slot[j] == 0 || chromosome->slot[j] == 1)
+											&& chromosome->slot[i] == 1))))) {
 				cnt1 = cnt1 + 1;
 				if (prnt == 1) {
 					tmperr.desc = " 3 Hours 11-13   ";
@@ -1018,37 +919,37 @@ void Individual::printdekanlik() {
 		if (lidx != -1) {
 			if (conf->courmat[i].cname.at(7) == '0' && conf->courmat[i].hours == 1
 					&& conf->courmat[i].cname.at(8) == '1') {
-				conf->lectures[lidx].cid1day = day[i];
-				conf->lectures[lidx].cid1slot = slot[i];
+				conf->lectures[lidx].cid1day = chromosome->day[i];
+				conf->lectures[lidx].cid1slot = chromosome->slot[i];
 			}
 			if (conf->courmat[i].cname.at(7) == '0' && conf->courmat[i].hours == 2
 					&& conf->courmat[i].cname.at(8) == '1') {
-				conf->lectures[lidx].cid2day = day[i];
-				conf->lectures[lidx].cid2slot = slot[i];
+				conf->lectures[lidx].cid2day = chromosome->day[i];
+				conf->lectures[lidx].cid2slot = chromosome->slot[i];
 			}
 			if (conf->courmat[i].cname.at(7) == '0' && conf->courmat[i].hours == 1
 					&& conf->courmat[i].cname.at(8) == '2') {
-				conf->lectures[lidx].cid3day = day[i];
-				conf->lectures[lidx].cid3slot = slot[i];
+				conf->lectures[lidx].cid3day = chromosome->day[i];
+				conf->lectures[lidx].cid3slot = chromosome->slot[i];
 			}
 			if (conf->courmat[i].cname.at(7) == '0' && conf->courmat[i].hours == 2
 					&& conf->courmat[i].cname.at(8) == '2') {
-				conf->lectures[lidx].cid4day = day[i];
-				conf->lectures[lidx].cid4slot = slot[i];
+				conf->lectures[lidx].cid4day = chromosome->day[i];
+				conf->lectures[lidx].cid4slot = chromosome->slot[i];
 			}
 			if (conf->courmat[i].cname.at(7) == 'L' && conf->courmat[i].cname.at(8) == '1'
 					&& conf->courmat[i].hours == 2) {
-				conf->lectures[lidx].lab1day = day[i];
-				conf->lectures[lidx].lab1slot = slot[i];
+				conf->lectures[lidx].lab1day = chromosome->day[i];
+				conf->lectures[lidx].lab1slot = chromosome->slot[i];
 			}
 			if (conf->courmat[i].cname.at(7) == 'L' && conf->courmat[i].cname.at(8) == '2'
 					&& conf->courmat[i].hours == 2) {
-				conf->lectures[lidx].lab2day = day[i];
-				conf->lectures[lidx].lab2slot = slot[i];
+				conf->lectures[lidx].lab2day = chromosome->day[i];
+				conf->lectures[lidx].lab2slot = chromosome->slot[i];
 			}
 			if (conf->courmat[i].cname.at(7) == 'L' && conf->courmat[i].hours == 1) {
-				conf->lectures[lidx].lab3day = day[i];
-				conf->lectures[lidx].lab3slot = slot[i];
+				conf->lectures[lidx].lab3day = chromosome->day[i];
+				conf->lectures[lidx].lab3slot = chromosome->slot[i];
 			}
 		}
 	}
@@ -1318,12 +1219,12 @@ void Individual::buildtimetable() {
 
 	for (i = 0; i < CHROML; i++) {
 		if (conf->courmat[i].has_constraint == 1) {
-			day[i] = conf->courmat[i].c2day;
-			slot[i] = conf->courmat[i].c2slot;
-			chrom[i] = 4 * conf->courmat[i].c2day + conf->courmat[i].c2slot;
+			chromosome->update(i, 4 * conf->courmat[i].c2day + conf->courmat[i].c2slot);
+			//update method updates day and slot but we need have to overwrite it for this occasion.
+			chromosome->day[i] = conf->courmat[i].c2day;
+			chromosome->slot[i] = conf->courmat[i].c2slot;
 		} else {
-			day[i] = chrom[i] / 4;
-			slot[i] = chrom[i] % 4;
+			chromosome->update_slot(i);
 		}
 	}
 	fitnessHCAL(0);
@@ -1380,12 +1281,12 @@ int Individual::findcourse(int sem, int dy, int slt) {
 	}
 	found = 0;
 	for (h = 0; h < CHROML; h++) {
-		if (conf->courmat[h].semid == sem && day[h] == dy && conf->courmat[h].hours == 2
-				&& slot[h] == rslot2) {
+		if (conf->courmat[h].semid == sem && chromosome->day[h] == dy && conf->courmat[h].hours == 2
+				&& chromosome->slot[h] == rslot2) {
 			found = 1;
 			break;
-		} else if (conf->courmat[h].semid == sem && day[h] == dy && conf->courmat[h].hours == 1
-				&& slot[h] == rslot1) {
+		} else if (conf->courmat[h].semid == sem && chromosome->day[h] == dy && conf->courmat[h].hours == 1
+				&& chromosome->slot[h] == rslot1) {
 			found = 1;
 			break;
 		}

@@ -12,14 +12,7 @@
 #include <string>
 #include "Course.h"
 #include "Lecture.h"
-
-#define CHROML 125
-#define POPUL 20
-#define NCOL 20
-#define NUMX 20
-#define NMUT 1
-#define RND(NUM)	rand() % NUM
-
+#include "Constants.h"
 
 namespace std {
 
