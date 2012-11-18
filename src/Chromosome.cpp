@@ -44,8 +44,18 @@ int Chromosome::get_slot(int section) {
 	return chrom[section];
 }
 
-list<int> Chromosome::get_section_list(int slot) {
-	return slot_map[slot];
+list<int> *Chromosome::get_longest_slot() {
+	list<int> *thelist = &slot_map[0];
+	for (int i = 1; i < NCOL; ++i) {
+		if (slot_map[i].size() > thelist->size()) {
+			thelist = &slot_map[i];
+		}
+	}
+	return thelist;
+}
+
+list<int> *Chromosome::get_section_list(int slot) {
+	return &slot_map[slot];
 }
 
 } /* namespace std */

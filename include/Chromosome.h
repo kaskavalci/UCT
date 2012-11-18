@@ -21,7 +21,8 @@ public:
 	void update(int section, int slot);
 	void update_slot(int section);
 	int get_slot(int section);
-	list<int> get_section_list(int slot);
+	list<int> *get_longest_slot();
+	list<int> *get_section_list(int slot);
 	int day[CHROML];
 	int slot[CHROML];
 	int chrom_length;

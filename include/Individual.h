@@ -22,11 +22,12 @@ public:
 	virtual ~Individual();
 
 	void hc1();
+	void hc_amap();
 
 	bool equalsh(Individual&, Individual&);
 	bool equalss(Individual&, Individual&);
 
-	void cross(Individual&, Individual&, Individual&);
+	void cross(Individual&, Individual&);
 	int fitnessHCAL(int);
 	int fitnessFCAL(int);
 	int fitnessF1CAL(int);
@@ -47,6 +48,7 @@ public:
 private:
 	int findcourse(int sem, int dy, int slt);
 	int decode(int);
+	void updatefitness();
 
 	Chromosome *chromosome;
 	int chrom_length;

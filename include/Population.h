@@ -23,18 +23,20 @@ public:
 
 private:
 	double getduration();
-	void crossmut3();
+	void crossover();
+	void mutation();
+	void add_new_individual(Individual&);
+	void selection(Individual&, Individual&);
 	void hillclimbmix2();
 	void initpareto();
 	bool foundinpar(int);
-	void nextgen(Individual[]);
-	void selection(Individual&, Individual&);
+	void selection_old(Individual&, Individual&);
 
 	time_t start;
-	int inpf3[POPUL];
+	bool inpf3[POPUL];
 	vector<int> paretof;
 	Common *conf;
-	vector<Individual> pop, ch;
+	vector<Individual> pop;
 	int crossel1;
 	int crossel2;
 };

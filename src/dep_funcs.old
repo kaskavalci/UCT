@@ -20,6 +20,64 @@
 	
 	int findmin();
 	
+	void Population::crossmut3() {
+	Individual parent1(conf), parent2(conf), child1(conf);
+	Mutation mutator(conf);
+	int i;
+	int crossrate = (int) (POPUL * conf->crrate / 2);
+	for (i = 0; i < POPUL; i++) {
+		ch[i] = pop[i];
+	}
+	for (i = 0; i < crossrate; i++) {
+		//todo: selection olayını hallet
+		selection_old(parent1, parent2);
+		//child1.cross(parent1, parent2, child1);
+		//todo: change it with worst element
+		ch[crossel1] = child1;
+	}
+	for (i = 0; i < POPUL; i++) {
+		mutator.setChromosome(ch[i].getChromosome());
+		mutator.mutate_all();
+		ch[i].buildtimetable();
+		ch[i].fitnessHCAL(0);
+		ch[i].fitnessFCAL(0);
+		ch[i].fitnessF1CAL(0);
+		ch[i].fitnessF2CAL(0);
+		ch[i].fitnessF3CAL(0);
+	}
+	hillclimbmix2();
+	for (i = 0; i < POPUL; i++) {
+		if (inpf3[i] != 1)
+			continue;
+		if (ch[i].dominates(&pop[i]) == D_TRUE && !(ch[i].equalsh(ch[i], pop[i]) && ch[i].equalss(ch[i], pop[i])))
+			pop[i] = ch[i];
+		else if ((ch[i].fitnessh + ch[i].fitnessh1 < pop[i].fitnessh + pop[i].fitnessh1)
+				&& (ch[i].fitnessf + ch[i].fitnessf2 < pop[i].fitnessf + pop[i].fitnessf2))
+			pop[i] = ch[i];
+	}
+	for (i = 0; i < POPUL; i++) {
+		if (inpf3[i] == 1) {
+			continue;
+		}
+		if (ch[i].dominates(&pop[i]) != D_FALSE)
+			pop[i] = ch[i];
+	}
+}
+void Population::nextgen(Individual child[]) {
+	Individual tmpind(conf);
+	int i, j;
+
+	for (i = 0; i < NUMX; i++) {
+		for (j = 0; j < POPUL; j++) {
+			if (!foundinpar(j) && child[i].dominates(&pop[j]) == 1) {
+				pop[j] = child[j];
+				break;
+			}
+		}
+	}
+	initpareto();
+}
+
 void Individual::cross(Individual&p1, Individual&p2, Individual&ch1, Individual&ch2) {
 	int pos, i;
 	pos = RND(CHROML);

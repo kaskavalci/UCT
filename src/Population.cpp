@@ -8,6 +8,7 @@
 #include "Population.h"
 #include <stdlib.h>
 #include <iostream>
+#include <fstream>
 #include <time.h>
 #include <stdio.h>
 #include "Mutation.h"
@@ -23,70 +24,81 @@ Population::Population(Common *conf) {
 	for (i = 0; i < POPUL; ++i) {
 		pop.push_back(Individual(conf));
 		pop[i].buildtimetable();
-		ch.push_back(Individual(conf));
-		ch[i].buildtimetable();
 	}
 	initpareto();
 }
 
 Population::~Population() {
 	pop.clear();
-	ch.clear();
 }
 
-void Population::crossmut3() {
-	Individual parent1(conf), parent2(conf), child1(conf);
-	Mutation mutator(conf);
-	int i;
-	int crossrate = (int) (POPUL * conf->crrate / 2);
-	for (i = 0; i < POPUL; i++) {
-		ch[i] = pop[i];
-	}
-	for (i = 0; i < crossrate; i++) {
-		//todo: selection olayýný hallet
-		selection(parent1, parent2);
-		child1.cross(parent1, parent2, child1);
-		//todo: change it with worst element
-		ch[crossel1] = child1;
-	}
-	for (i = 0; i < POPUL; i++) {
-		mutator.setChromosome(ch[i].getChromosome());
-		mutator.mutate_all();
-		ch[i].buildtimetable();
-		ch[i].fitnessHCAL(0);
-		ch[i].fitnessFCAL(0);
-		ch[i].fitnessF1CAL(0);
-		ch[i].fitnessF2CAL(0);
-		ch[i].fitnessF3CAL(0);
-	}
-	hillclimbmix2();
-	for (i = 0; i < POPUL; i++) {
-		if (inpf3[i] != 1)
-			continue;
-		if (ch[i].dominates(&pop[i]) == 1 && !(ch[i].equalsh(ch[i], pop[i]) && ch[i].equalss(ch[i], pop[i])))
-			pop[i] = ch[i];
-		else if ((ch[i].fitnessh + ch[i].fitnessh1 < pop[i].fitnessh + pop[i].fitnessh1)
-				&& (ch[i].fitnessf + ch[i].fitnessf2 < pop[i].fitnessf + pop[i].fitnessf2))
-			pop[i] = ch[i];
-	}
-	for (i = 0; i < POPUL; i++) {
-		if (inpf3[i] == 1) {
-			continue;
-		}
-		if (ch[i].dominates(&pop[i]) != 2)
-			pop[i] = ch[i];
-	}
-}
 void Population::hillclimbmix2() {
 	int m;
 	for (m = 0; m < POPUL * conf->hillsize; m++) {
 		if (RND(1000) < 1000 * conf->hillboth) {
-			ch[m].hc1();
+			pop[m].hc_amap();
 		}
 	}
 }
 
 void Population::selection(Individual&parent1, Individual&parent2) {
+	//select
+}
+
+void Population::crossover() {
+	int crossrate = (int) (POPUL * conf->crrate / 2);
+	Individual parent1(conf), parent2(conf), child(conf);
+
+	for (int i = 0; i < crossrate; ++i) {
+		//todo: selection, tournament.
+		selection_old(parent1, parent2);
+		child.cross(parent1, parent2);
+		child.hc_amap();
+		child.buildtimetable();
+		add_new_individual(child);
+	}
+}
+
+//adds the given individual to population and update pareto.
+void Population::add_new_individual(Individual& candidate) {
+	for (int i = 0; i < POPUL; ++i) {
+		if (candidate.dominates(&pop[i]) == D_TRUE) {
+			if (!inpf3[i]) {
+				pop[i] = candidate;
+				initpareto();
+				return;
+			}
+		}
+
+	}
+	//if we have reached this line, then there is no domination. give a slight chance for
+	//weak individual "candidate" to be inserted into population.
+	if (RND(1000) < 1000 * conf->insert_popul_rate) {
+		int rnd_pos;
+		//don't touch to pareto front.
+		do {
+			rnd_pos = RND(POPUL);
+		} while (inpf3[rnd_pos]);
+		pop[rnd_pos] = candidate;
+	}
+}
+/*
+ * mutate every individual with a rate of given mutation rates, except for pareto front.
+ */
+void Population::mutation() {
+	Mutation mutator(conf);
+	for (int i = 0; i < POPUL; ++i) {
+		if (inpf3[i])
+			continue;
+		mutator.setChromosome(pop[i].getChromosome());
+		//if any mutation occured, re-build timetable.
+		if (mutator.mutate_all()) {
+			pop[i].buildtimetable();
+		}
+	}
+}
+
+void Population::selection_old(Individual&parent1, Individual&parent2) {
 	int sel1, sel2;
 	sel1 = RND(POPUL);
 	sel2 = RND(POPUL);
@@ -95,10 +107,10 @@ void Population::selection(Individual&parent1, Individual&parent2) {
 	}
 	Individual p1 = pop[sel1], p2 = pop[sel2];
 
-	if (p1.dominates(&p2) == 1) {
+	if (p1.dominates(&p2) == D_TRUE) {
 		parent1 = p1;
 		crossel1 = sel1;
-	} else if (p1.dominates(&p2) == 2) {
+	} else if (p1.dominates(&p2) == D_FALSE) {
 		parent1 = p2;
 		crossel1 = sel2;
 	} else if (RND(100) < 50) {
@@ -114,10 +126,10 @@ void Population::selection(Individual&parent1, Individual&parent2) {
 		sel2 = RND(POPUL);
 	}
 	Individual p3 = pop[sel1], p4 = pop[sel2];
-	if (p3.dominates(&p4) == 1) {
+	if (p3.dominates(&p4) == D_TRUE) {
 		parent2 = p3;
 		crossel2 = sel1;
-	} else if (p3.dominates(&p4) == 2) {
+	} else if (p3.dominates(&p4) == D_FALSE) {
 		parent2 = p4;
 		crossel2 = sel2;
 	} else if (RND(100) < 50) {
@@ -137,23 +149,16 @@ bool Population::foundinpar(int idx) {
 	}
 	return false;
 }
-void Population::nextgen(Individual child[]) {
-	Individual tmpind(conf);
-	int i, j;
-
-	for (i = 0; i < NUMX; i++) {
-		for (j = 0; j < POPUL; j++) {
-			if (!foundinpar(j) && child[i].dominates(&pop[j]) == 1) {
-				pop[j] = child[j];
-				break;
-			}
-		}
-	}
-	initpareto();
-}
+/*
+ * clear and re-construct pareto again. Individuals that have too close fitness values
+ * are vulnerable to change. This is done to preserve diversity.
+ */
 void Population::initpareto() {
-	int i, domination = 0;
+	int i;
+	bool domination;
 	size_t j;
+
+	paretof.clear();
 	while (paretof.size() != 0) {
 		for (j = 0; j < paretof.size(); j++)
 			paretof.pop_back();
@@ -161,27 +166,38 @@ void Population::initpareto() {
 	paretof.push_back(0);
 
 	for (i = 0; i < POPUL; i++) {
-		inpf3[i] = 0;
+		inpf3[i] = false;
 	}
-	inpf3[0] = 1;
 	for (i = 1; i < POPUL; i++) {
-		domination = 0;
+		domination = false;
 		for (j = 0; j < paretof.size(); j++) {
-			if (pop[i].dominates(&pop[paretof[j]]) == 1) {
-				inpf3[i] = 1;
-				inpf3[paretof[j]] = 0;
-				domination = 1;
+			if (pop[i].dominates(&pop[paretof[j]]) == D_TRUE) {
+				inpf3[i] = true;
+				inpf3[paretof[j]] = false;
+				domination = true;
 				paretof[j] = i;
 				break;
 			}
-			if (pop[i].dominates(&pop[paretof[j]]) == 2) {
-				domination = 1;
+			if (pop[i].dominates(&pop[paretof[j]]) == D_FALSE) {
+				domination = true;
 				break;
 			}
 		}
-		if (domination == 0 && paretof.size() < 2 * POPUL / 3) {
-			inpf3[i] = 1;
-			paretof.push_back(i);
+		if (!domination) {
+			if (paretof.size() < 2 * POPUL / 3) {
+				inpf3[i] = true;
+				paretof.push_back(i);
+			} else {
+				for (size_t k = 0; k < paretof.size(); ++k) {
+					for (size_t m = k + 1; m < paretof.size(); ++m) {
+						//pareto front contains elements that are too close to each other.
+						//pareto front should have diversity, thus we replace it with new Individual
+						if (pop[paretof[k]].dominates(&pop[paretof[m]]) == D_IN_RANGE) {
+							pop[paretof[k]] = pop[i];
+						}
+					}
+				}
+			}
 		}
 	}
 }
@@ -200,9 +216,7 @@ void Population::run(int seed) {
 	double duration = getduration();
 	int fit;
 	size_t m;
-	FILE*resf = fopen("result.txt", "a");
-	FILE*poprh = fopen("poprh.txt", "a");
-	FILE*poprs = fopen("poprs.txt", "a");
+	ofstream fresult("result.txt", ios::app);
 
 	while ((int) duration <= conf->dur) {
 		it++;
@@ -236,10 +250,11 @@ void Population::run(int seed) {
 			printf("# of iterations %d duration %d\n", it, (int) duration);
 			printf("# smallest  %d \n", smallestidx);
 		}
-		crossmut3();
+		crossover();
+		hillclimbmix2();
+		mutation();
 		initpareto();
 	}
-	int drr = 1200;
 
 	int fit2, fit4, fit6 = 20000;
 	fit6 = 20000;
@@ -262,7 +277,7 @@ void Population::run(int seed) {
 	printf("# of iterations %d duration %d\n", it, (int) duration);
 	printf("# smallest  %d \n", smallestidx);
 	printf("THE SOULUTION IS  \n");
-	pop[paretof[smallestidx]].printlect();
+	//pop[paretof[smallestidx]].printlect();
 	pop[paretof[smallestidx]].printdekanlik();
 	pop[paretof[smallestidx]].printtable();
 	fit = pop[paretof[smallestidx]].fitnessHCAL(1);
@@ -272,7 +287,7 @@ void Population::run(int seed) {
 	fit = pop[paretof[smallestidx]].fitnessF3CAL(1);
 	for (m = 0; m < paretof.size(); m++) {
 		printf("THE SOULUTION IS %d \n", m);
-		pop[paretof[m]].printlect();
+		//pop[paretof[m]].printlect();
 		pop[paretof[m]].printdekanlik();
 		pop[paretof[m]].printtable();
 		fit = pop[paretof[m]].fitnessHCAL(1);
@@ -281,15 +296,14 @@ void Population::run(int seed) {
 		fit = pop[paretof[m]].fitnessF2CAL(1);
 		fit = pop[paretof[m]].fitnessF3CAL(1);
 	}
-	fprintf(resf, "hard soft  %5d  %5d   dur %5d seed %12d \n", pop[paretof[smallestidx]].fitnessh,
-			pop[paretof[smallestidx]].fitnessf + pop[paretof[smallestidx]].fitnessf2, drr, seed);
-	fprintf(poprh, "%5d \n", pop[paretof[smallestidx]].fitnessh + pop[paretof[smallestidx]].fitnessh1);
-	fprintf(poprs, "%5d \n", pop[paretof[smallestidx]].fitnessf + pop[paretof[smallestidx]].fitnessf2);
+	fresult << "hard1:" << pop[paretof[smallestidx]].fitnessh << " hard2:" << pop[paretof[smallestidx]].fitnessh1
+			<< " soft1:" << pop[paretof[smallestidx]].fitnessf << " soft2:" << pop[paretof[smallestidx]].fitnessf2
+			<< " duration: " << duration << "hillrnd: " << conf->hillrnd << "hillboth:" << conf->hillboth
+			<< "mutrate:" << conf->mutg1rate << " crrate:" << conf->crrate << " insertRate:" << conf->insert_popul_rate
+			<< "pspace:" << conf->paretof_pspace  << " seed:" << seed << endl;
 	duration = getduration();
 	printf("\n\nThe operation completed in %.2lf seconds.\n", duration);
-	fclose(poprh);
-	fclose(poprs);
-	fclose(resf);
+	fresult.close();
 }
 
 } /* namespace std */

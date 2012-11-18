@@ -20,17 +20,23 @@ Mutation::~Mutation() {
 	// TODO Auto-generated destructor stub
 }
 
-void Mutation::mutate() {
-	int pos, val;
-	pos = RND(CHROML);
-	val = RND(NCOL);
-	if (conf->courmat[pos].has_constraint != 1) {
-		chromosome->update(pos, val);
+bool Mutation::mutate() {
+	if (RND(1000000) < 1000000 * conf->mutg5rate)
+	{
+		int pos, val;
+		pos = RND(CHROML);
+		val = RND(NCOL);
+		if (conf->courmat[pos].has_constraint != 1) {
+			chromosome->update(pos, val);
+		}
+		return true;
 	}
+	return false;
 }
 
-void Mutation::mutateg1() {
+bool Mutation::mutateg1() {
 	int col1, col2, i, k;
+	bool retval = false;
 	for (k = 0; k < chromosome->chrom_length; k++) {
 		if (RND(1000000) > 1000000 * conf->mutg1rate)
 			continue;
@@ -39,17 +45,21 @@ void Mutation::mutateg1() {
 		for (i = 0; i < chromosome->chrom_length; i++) {
 			if (chromosome->get_slot(i) == col1) {
 				chromosome->update(i, col2);
+				retval = true;
 			} else if (chromosome->get_slot(i) == col2) {
 				chromosome->update(i, col1);
+				retval = true;
 			}
 		}
 	}
+	return retval;
 }
 
-void Mutation::mutateg3() {
+bool Mutation::mutateg3() {
 	int i, k;
 	int pos1, pos2;
 	int val1, val2;
+	bool retval = false;
 	for (k = 0; k < chromosome->chrom_length; k++) {
 		if (RND(1000000) > 1000000 * conf->mutg3rate)
 			continue;
@@ -63,15 +73,18 @@ void Mutation::mutateg3() {
 		for (i = 0; i < chromosome->chrom_length; i++) {
 			if (chromosome->get_slot(i) == val1 && RND(100) < 50) {
 				chromosome->update(i, val2);
+				retval = true;
 			}
 		}
 	}
+	return retval;
 }
 
-void Mutation::mutateg5() {
+bool Mutation::mutateg5() {
 	int i, sel, k;
 	int pos1, pos2, pos3;
 	int val1, val2, val3;
+	bool retval = false;
 	for (k = 0; k < chromosome->chrom_length; k++) {
 		if (RND(1000000) > 1000000 * conf->mutg5rate)
 			continue;
@@ -91,18 +104,23 @@ void Mutation::mutateg5() {
 			sel = RND(2);
 			if (chromosome->get_slot(i) == val3 && sel == 0 && RND(100) < 50) {
 				chromosome->update(i, val1);
+				retval = true;
 			} else if (chromosome->get_slot(i) == val3 && sel == 1 && RND(100) < 50) {
 				chromosome->update(i, val2);
+				retval = true;
 			}
 		}
 	}
+	return retval;
 }
 
-void Mutation::mutate_all() {
-	mutate();
-	mutateg1();
-	mutateg3();
-	mutateg5();
+bool Mutation::mutate_all() {
+	bool retval = false;
+	retval |= mutate();
+	retval |= mutateg1();
+	retval |= mutateg3();
+	retval |= mutateg5();
+	return retval;
 }
 
 void Mutation::setChromosome(Chromosome* chromosome) {

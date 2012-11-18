@@ -1,10 +1,11 @@
-dur		3000
+dur		2000
 
 hillsize	1.00
-hillrnd		0.900
-hillboth	0.04
-mutg1rate	0.4
-mutg3rate	0.4
-mutg5rate	0.4
+hillrnd		0.1
+hillboth	0.01
+mutg1rate	0.3
+mutg3rate	0.3
+mutg5rate	0.3
 crrate		0.9
-hciter		8
+randomly_insert_to_population	0.005
+paretofront_personalspace	3

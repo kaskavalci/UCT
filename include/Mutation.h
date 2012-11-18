@@ -17,11 +17,11 @@ class Mutation {
 public:
 	Mutation(Common *conf);
 	virtual ~Mutation();
-	void mutate();
-	void mutateg1();
-	void mutateg3();
-	void mutateg5();
-	void mutate_all();
+	bool mutate();
+	bool mutateg1();
+	bool mutateg3();
+	bool mutateg5();
+	bool mutate_all();
 	void setChromosome(Chromosome* chromosome);
 
 private:

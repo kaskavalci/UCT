@@ -16,5 +16,7 @@
 #define NMUT 1
 #define RND(NUM)	rand() % NUM
 
+enum {D_TRUE, D_FALSE, D_IN_RANGE, D_OUT_RANGE };
+
 
 #endif /* CONSTANTS_H_ */

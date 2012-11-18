@@ -193,8 +193,6 @@ void FileReader::readinputparam() {
 			conf->hillrnd = inpval;
 		else if (!inpname.compare("hillboth"))
 			conf->hillboth = inpval;
-		else if (!inpname.compare("hciter"))
-			conf->hciter = inpval;
 		else if (!inpname.compare("crrate"))
 			conf->crrate = inpval;
 		else if (!inpname.compare("mutg1rate"))
@@ -203,6 +201,10 @@ void FileReader::readinputparam() {
 			conf->mutg3rate = inpval;
 		else if (!inpname.compare("mutg5rate"))
 			conf->mutg5rate = inpval;
+		else if (!inpname.compare("randomly_insert_to_population"))
+			conf->insert_popul_rate = inpval;
+		else if (!inpname.compare("paretofront_personalspace"))
+			conf->paretof_pspace = inpval;
 	}
 	input.close();
 }

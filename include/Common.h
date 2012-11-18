@@ -43,11 +43,12 @@ public:
 	float hillsize;
 	float hillboth;
 	float hillrnd;
-	int hciter;
 	float crrate;
 	float mutg1rate;
 	float mutg3rate;
 	float mutg5rate;
+	float insert_popul_rate;
+	int paretof_pspace;
 
 };
 
