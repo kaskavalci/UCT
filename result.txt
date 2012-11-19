@@ -14,3 +14,4 @@ hard soft      2     10   dur  1200 seed            3
 hard soft      0      4   dur  1200 seed            3 
 hard soft      0      4   dur  1200 seed            3 
 hard soft      5     12   dur  1200 seed            0 
+hard1:119 hard2:49 soft1:12 soft2:134 duration: 1001hillrnd: 0.2hillboth:0.2mutrate:0.3 crrate:0.9 insertRate:0.005pspace:3 seed:1353363277

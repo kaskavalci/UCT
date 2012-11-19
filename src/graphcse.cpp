@@ -29,12 +29,17 @@ int main(int argc, char*argv[]) {
 	reader.readinputparam();
 	reader.readcourses();
 	reader.readreq();
-	reader.readContrictions("constcse.txt");
+	reader.readConst("constcse.txt");
 
 	fprintf(tstf, "CHROML %d POPUL %d NUMX %d NMUT %d \n", CHROML, POPUL, NUMX,
 			NMUT);
 	unsigned long seed;
-	seed = atoi(argv[1]);
+	if (argc > 2) {
+		seed = atoi(argv[1]);
+	}
+	else {
+		seed = time(0);
+	}
 	srand(seed);
 	Population popn(&conf);
 	popn.run(seed);

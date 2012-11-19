@@ -47,11 +47,11 @@ void FileReader::readreq() {
 }
 void FileReader::readcourses() {
 	//todo: cpp lib'e çevir. veri yapýsýndaki sýðýrlýðý düzelt.
-	FILE*input;
+	ifstream input;
+	input.open("inputcse.txt");
 	char cnm[20], lnm[20];
 	int c2day, c2slot;
 	int counter = 0, i, j;
-	input = fopen("inputcse.txt", "r");
 	for (i = 0; i < CHROML; i++) {
 		conf->courmat[i].semid = -1;
 		conf->courmat[i].hours = -1;
@@ -59,19 +59,15 @@ void FileReader::readcourses() {
 		conf->courmat[i].c2day = -1;
 		conf->courmat[i].c2day = -1;
 	}
-	while (!feof(input)) {
-		fscanf(input, "%s", cnm);
+	while (!input.eof()) {
+		input >> cnm;
 		if (strcmp(cnm, "C4") && strcmp(cnm, "C2")) {
-			fscanf(input, "%s", lnm);
-			fscanf(input, "%d", &(conf->courmat[counter].semid));
-			fscanf(input, "%d\n", &(conf->courmat[counter].hours));
+			input >> lnm >> conf->courmat[counter].semid >> conf->courmat[counter].hours;
 			conf->courmat[counter].cname = cnm;
 			conf->courmat[counter].lname = lnm;
 			counter++;
 		} else if (!strcmp(cnm, "C2")) {
-			fscanf(input, "%s", lnm);
-			fscanf(input, "%d", &c2day);
-			fscanf(input, "%d\n", &c2slot);
+			input >> lnm >> c2day >> c2slot;
 			for (j = 0; j < CHROML; j++) {
 				if (conf->courmat[j].cname == lnm) {
 					conf->courmat[j].has_constraint = 1;
@@ -81,7 +77,7 @@ void FileReader::readcourses() {
 			}
 		}
 	}
-	fclose(input);
+	input.close();
 	Lecture tmplect;
 	for (i = 0; i < CHROML; i++) {
 		printf("AAAAAidx cid %d %s\n", i, conf->courmat[i].cname.data());
@@ -213,7 +209,7 @@ FileReader::FileReader(Common* c) {
 	conf = c;
 }
 
-void FileReader::readContrictions(const char *fname)
+void FileReader::readConst(const char *fname)
 {
 	int i, j, inode, nnode;
 	ifstream input;

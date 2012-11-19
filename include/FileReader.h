@@ -18,7 +18,7 @@ public:
 	void readreq();
 	void readcourses();
 	void readinputparam();
-	void readContrictions(const char *fname);
+	void readConst(const char *fname);
 private:
 	Common *conf;
 };

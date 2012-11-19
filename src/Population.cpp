@@ -36,7 +36,7 @@ void Population::hillclimbmix2() {
 	int m;
 	for (m = 0; m < POPUL * conf->hillsize; m++) {
 		if (RND(1000) < 1000 * conf->hillboth) {
-			pop[m].hc_amap();
+			pop[m].hc_worstsection();
 		}
 	}
 }
@@ -53,7 +53,7 @@ void Population::crossover() {
 		//todo: selection, tournament.
 		selection_old(parent1, parent2);
 		child.cross(parent1, parent2);
-		child.hc_amap();
+		child.hc_worstsection();
 		child.buildtimetable();
 		add_new_individual(child);
 	}
@@ -184,7 +184,7 @@ void Population::initpareto() {
 			}
 		}
 		if (!domination) {
-			if (paretof.size() < 2 * POPUL / 3) {
+			if (paretof.size() < POPUL / 2) {
 				inpf3[i] = true;
 				paretof.push_back(i);
 			} else {
@@ -216,7 +216,6 @@ void Population::run(int seed) {
 	double duration = getduration();
 	int fit;
 	size_t m;
-	ofstream fresult("result.txt", ios::app);
 
 	while ((int) duration <= conf->dur) {
 		it++;
@@ -296,11 +295,15 @@ void Population::run(int seed) {
 		fit = pop[paretof[m]].fitnessF2CAL(1);
 		fit = pop[paretof[m]].fitnessF3CAL(1);
 	}
+	fstream fresult;
+	fresult.open("result.txt", fstream::app | fstream::out);
+	fresult << "asdasdasd";
 	fresult << "hard1:" << pop[paretof[smallestidx]].fitnessh << " hard2:" << pop[paretof[smallestidx]].fitnessh1
 			<< " soft1:" << pop[paretof[smallestidx]].fitnessf << " soft2:" << pop[paretof[smallestidx]].fitnessf2
 			<< " duration: " << duration << "hillrnd: " << conf->hillrnd << "hillboth:" << conf->hillboth
 			<< "mutrate:" << conf->mutg1rate << " crrate:" << conf->crrate << " insertRate:" << conf->insert_popul_rate
 			<< "pspace:" << conf->paretof_pspace  << " seed:" << seed << endl;
+	fresult.flush();
 	duration = getduration();
 	printf("\n\nThe operation completed in %.2lf seconds.\n", duration);
 	fresult.close();

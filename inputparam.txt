@@ -1,8 +1,8 @@
-dur		2000
+dur		1000
 
 hillsize	1.00
-hillrnd		0.1
-hillboth	0.01
+hillrnd		0.2
+hillboth	0.2
 mutg1rate	0.3
 mutg3rate	0.3
 mutg5rate	0.3

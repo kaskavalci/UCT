@@ -11,7 +11,6 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "FileReader.h"
-#include <list>
 
 namespace std {
 
@@ -109,13 +108,12 @@ bool Individual::equalsh(Individual&in1, Individual&in2) {
 }
 
 //do hill climb operation for the longest slot of gene. Longest slot means the slot with most lectures.
-void Individual::hc_amap() {
+void Individual::hc_longestslot() {
 	Individual subject(*this);
 	list<int> longest_slot(*subject.chromosome->get_longest_slot());
 	list<int>::iterator it;
-	for (it = longest_slot.begin(); it != longest_slot.end(); ++it)
-	{
-		if (conf->courmat[*it].has_constraint == 1 || RND(1000) > 1000 * conf->hillrnd )	{
+	for (it = longest_slot.begin(); it != longest_slot.end(); ++it) {
+		if (conf->courmat[*it].has_constraint == 1 || RND(1000) > 1000 * conf->hillrnd) {
 			//no hill climbing for courses which has day constraints.
 			continue;
 		}
@@ -189,10 +187,18 @@ void Individual::cross(Individual&p1, Individual&p2) {
 			}
 		}
 	}
-	//we copied the largest sets from p1 and p2. but there might have chromosomes haven't copied yet. Randomize them.
+	//we copied the largest sets from p1 and p2. but there might have chromosomes haven't copied yet. Randomly inherit from parents.
 	for (int i = 0; i < CHROML; ++i) {
 		if (checked[i] == false) {
-			this->chromosome->add(i, RND(NCOL));
+			switch (RND(2)) {
+				case 0:
+					chrom = p1.chromosome;
+					break;
+				case 1:
+					chrom = p2.chromosome;
+					break;
+			}
+			this->chromosome->add(i, chrom->get_slot(i));
 		}
 	}
 }
@@ -221,13 +227,10 @@ int Individual::dominates(Individual *target) {
 	int tr_z1 = target->fitnessf - conf->paretof_pspace, tr_z2 = target->fitnessf + conf->paretof_pspace;
 	int tr_w1 = target->fitnessf2 - conf->paretof_pspace, tr_w2 = target->fitnessf2 + conf->paretof_pspace;
 	//overlap condition
-	if (my_x1 < tr_x2 && my_x2 > tr_x1 &&
-			my_y1 < tr_y2 && my_y2 > tr_y1 &&
-			my_z1 < tr_z1 && my_z2 > tr_z1 &&
-			my_w1 < tr_w1 && my_w2 > tr_w1) {
+	if (my_x1 < tr_x2 && my_x2 > tr_x1 && my_y1 < tr_y2 && my_y2 > tr_y1 && my_z1 < tr_z1 && my_z2 > tr_z1
+			&& my_w1 < tr_w1 && my_w2 > tr_w1) {
 		return D_IN_RANGE;
-	}
-	else
+	} else
 		return D_OUT_RANGE;
 }
 
@@ -341,11 +344,7 @@ int Individual::fitnessFCAL(int prnt) {
 	size_t i, h;
 	for (i = 0; i < CHROML; i++) {
 		//Department meeting conflict
-		if (((conf->cse[i] == 1 && chromosome->day[i] == 3 && (chromosome->slot[i] == 2)
-				&& conf->courmat[i].hours == 2)
-				|| (conf->cse[i] == 1 && chromosome->day[i] == 3 && (chromosome->slot[i] == 2)
-						&& conf->courmat[i].hours == 1)) && conf->courmat[i].cname.substr(0, 8) != "cse211.L"
-				&& conf->courmat[i].cname.substr(0, 8) != "cse112.L") {
+		if (fit_sdepmeet(i)) {
 			cnt = cnt + 1;
 			if (prnt == 1) {
 				tmperr.desc = " 15 Departmental Meeting     ";
@@ -360,15 +359,7 @@ int Individual::fitnessFCAL(int prnt) {
 		}
 		//Hardware labs conflict
 		for (j = i + 1; j < CHROML; j++) {
-			if ((conf->lab[i] == 1 && conf->lab[j] == 1)
-					&& (((conf->courmat[i].cname.substr(0, 6) == "cse221"
-							|| conf->courmat[i].cname.substr(0, 6) == "cse421"
-							|| conf->courmat[i].cname.substr(0, 6) == "cse232")
-							&& (conf->courmat[j].cname.substr(0, 6) == "cse221"
-									|| conf->courmat[j].cname.substr(0, 6) == "cse421"
-									|| conf->courmat[j].cname.substr(0, 6) == "cse232"))
-							&& (chromosome->day[i] == chromosome->day[j]
-									&& chromosome->slot[i] == chromosome->slot[j]))) {
+			if (fit_slabconf(i, j)) {
 				cnt = cnt + 1;
 				if (prnt == 1) {
 					tmperr.desc = " 16 Hardware Labs      ";
@@ -890,16 +881,7 @@ int Individual::fitnessHCAL(int prnt) {
 	Errnode tmperr;
 	for (i = 0; i < CHROML; i++) {
 		for (j = i + 1; j < CHROML; j++) {
-			if ((i != j && conf->confmat[i][j] == 1 && chromosome->get_slot(i) == chromosome->get_slot(j)
-					&& conf->courmat[i].hours == conf->courmat[j].hours)
-					|| (i != j && conf->confmat[i][j] == 1 && conf->courmat[i].hours != conf->courmat[j].hours
-							&& chromosome->day[i] == chromosome->day[j]
-							&& ((conf->courmat[i].hours == 1 && conf->courmat[j].hours == 2
-									&& (chromosome->slot[i] == 0 || chromosome->slot[i] == 1)
-									&& chromosome->slot[j] == 1)
-									|| (conf->courmat[i].hours == 2 && conf->courmat[j].hours == 1
-											&& (chromosome->slot[j] == 0 || chromosome->slot[j] == 1)
-											&& chromosome->slot[i] == 1)))) {
+			if (fit_hconfmat(i, j)) {
 				cnt = cnt + 1;
 				if (prnt == 1) {
 					tmperr.desc = " 1 Confmat ";
@@ -912,9 +894,7 @@ int Individual::fitnessHCAL(int prnt) {
 					conflv.push_back(j);
 				}
 			}
-			if (i != j && chromosome->day[i] == chromosome->day[j] && conf->cid[i] == conf->cid[j]
-					&& conf->courmat[i].cname.substr(0, 8) != "cse211.L"
-					&& conf->courmat[i].cname.substr(0, 8) != "cse112.L") {
+			if (fit_hsameday(i, j)) {
 				cnt = cnt + 1;
 				if (prnt == 1) {
 					tmperr.desc = " 2 Same Day ";
@@ -927,14 +907,7 @@ int Individual::fitnessHCAL(int prnt) {
 					conflv.push_back(j);
 				}
 			}
-			if (i != j && conf->courmat[i].semid == conf->courmat[j].semid
-					&& chromosome->day[i] == chromosome->day[j]
-					&& ((conf->courmat[i].hours == 1 && conf->courmat[j].hours == 2
-							&& (chromosome->slot[i] == 0 || chromosome->slot[i] == 1)
-							&& chromosome->slot[j] == 1)
-							|| ((conf->courmat[i].hours == 2 && conf->courmat[j].hours == 1
-									&& ((chromosome->slot[j] == 0 || chromosome->slot[j] == 1)
-											&& chromosome->slot[i] == 1))))) {
+			if (fit_hmidday(i, j)) {
 				cnt1 = cnt1 + 1;
 				if (prnt == 1) {
 					tmperr.desc = " 3 Hours 11-13   ";
@@ -1378,6 +1351,174 @@ void Individual::updatefitness() {
 	fitnessF1CAL(0);
 	fitnessF2CAL(0);
 	fitnessF3CAL(0);
+}
+
+bool Individual::fit_hconfmat(int i, int j) {
+	return conf->confmat[i][j] == 1
+			&& ((chromosome->get_slot(i) == chromosome->get_slot(j)
+					&& conf->courmat[i].hours == conf->courmat[j].hours)
+					|| (conf->courmat[i].hours != conf->courmat[j].hours
+							&& chromosome->day[i] == chromosome->day[j]
+							&& ((conf->courmat[i].hours == 1 && conf->courmat[j].hours == 2
+									&& (chromosome->slot[i] == 0 || chromosome->slot[i] == 1)
+									&& chromosome->slot[j] == 1)
+									|| (conf->courmat[i].hours == 2 && conf->courmat[j].hours == 1
+											&& (chromosome->slot[j] == 0 || chromosome->slot[j] == 1)
+											&& chromosome->slot[i] == 1))));
+}
+
+bool Individual::fit_hsameday(int i, int j) {
+	return chromosome->day[i] == chromosome->day[j] && conf->cid[i] == conf->cid[j]
+			&& conf->courmat[i].cname.substr(0, 8) != "cse211.L"
+			&& conf->courmat[i].cname.substr(0, 8) != "cse112.L";
+}
+
+bool Individual::fit_hmidday(int i, int j) {
+	return conf->courmat[i].semid == conf->courmat[j].semid && chromosome->day[i] == chromosome->day[j]
+			&& ((conf->courmat[i].hours == 1 && conf->courmat[j].hours == 2
+					&& (chromosome->slot[i] == 0 || chromosome->slot[i] == 1) && chromosome->slot[j] == 1)
+					|| ((conf->courmat[i].hours == 2 && conf->courmat[j].hours == 1
+							&& ((chromosome->slot[j] == 0 || chromosome->slot[j] == 1)
+									&& chromosome->slot[i] == 1))));
+}
+
+bool Individual::fit_sdepmeet(int i) {
+	return ((conf->cse[i] == 1 && chromosome->day[i] == 3 && (chromosome->slot[i] == 2)
+			&& conf->courmat[i].hours == 2)
+			|| (conf->cse[i] == 1 && chromosome->day[i] == 3 && (chromosome->slot[i] == 2)
+					&& conf->courmat[i].hours == 1)) && conf->courmat[i].cname.substr(0, 8) != "cse211.L"
+			&& conf->courmat[i].cname.substr(0, 8) != "cse112.L";
+}
+
+void Individual::hc_worstsection() {
+	Individual subject(*this);
+	s_worst_chrom_t worst_sec;
+	s_hard_fitness_t oldfit, newfit;
+	int rnd_slot;
+	int max_attempt = 10; //no infinite loop if we have perfect individual.
+	//try to find a slot that has conflicts.
+	do {
+		rnd_slot = RND(NCOL);
+		get_hardfit(*subject.chromosome->get_section_list(rnd_slot), worst_sec);
+		max_attempt--;
+	} while (worst_sec.id[0] == -1 && worst_sec.id[1] == -1 && worst_sec.id[2] != -1 && max_attempt > 0);
+
+	if (!max_attempt) {
+		//yay! perfect individual. no need for hill climbing!
+		return;
+	}
+	int maxdiff[3] = {0,0,0}, maxid[3] = {-1, -1, -1};
+
+	for (int selcolor = 0; selcolor < no_colors; selcolor++) {
+		//mutate the child's gene in the longest_slot list for every color except for its own
+		if (selcolor == rnd_slot) {
+			continue;
+		}
+		//restore old fitness of selcolor
+		get_hardfit(*subject.chromosome->get_section_list(selcolor), oldfit);
+		//update the gene to selcolor, if we have any "worst" color.
+		for (int i = 0; i < 3; ++i) {
+			if (worst_sec.id[i] != -1) {
+				subject.chromosome->update(worst_sec.id[i], selcolor);
+			}
+		}
+		//get the new fitness for comparison
+		get_hardfit(*subject.chromosome->get_section_list(selcolor), newfit);
+
+		for (int i = 0; i < 3; ++i) {
+			if (worst_sec.id[i] != -1 && (oldfit.fitness[i] - newfit.fitness[i]) > maxdiff[i]) {
+				maxdiff[i] = oldfit.fitness[i] - newfit.fitness[i];
+				maxid[i] = selcolor;
+			}
+		}
+		//un-stage changes
+		for (int i = 0; i < 3; ++i) {
+			if (worst_sec.id[i] != -1) {
+				subject.chromosome->update(worst_sec.id[i], rnd_slot);
+			}
+		}
+	}
+
+	bool somechanges = false;
+	//if difference is larger than 0, then we found a better slot for that section.
+	for (int i = 0; i < 3; ++i) {
+		if (maxdiff[i] > 0) {
+			chromosome->update(worst_sec.id[i], maxid[i]);
+			somechanges = true;
+		}
+	}
+	//todo: updatefitness'ý deðiþtir. modüler fitness tut, herþeyi baþtan hesaplama.
+	if (somechanges) {
+		updatefitness();
+	}
+}
+
+bool Individual::fit_slabconf(int i, int j) {
+	return (conf->lab[i] == 1 && conf->lab[j] == 1)
+			&& (((conf->courmat[i].cname.substr(0, 6) == "cse221"
+					|| conf->courmat[i].cname.substr(0, 6) == "cse421"
+					|| conf->courmat[i].cname.substr(0, 6) == "cse232")
+					&& (conf->courmat[j].cname.substr(0, 6) == "cse221"
+							|| conf->courmat[j].cname.substr(0, 6) == "cse421"
+							|| conf->courmat[j].cname.substr(0, 6) == "cse232"))
+					&& (chromosome->day[i] == chromosome->day[j] && chromosome->slot[i] == chromosome->slot[j]));
+}
+/*
+ * takes a list of slots (which contain course ID that is assigned to slot, for more info refer to Chromosome.cpp::slot_map)
+ * and find the worst gene in it. Also compute fitness of the slot.
+ */
+void Individual::get_hardfit(list<int> &list, s_worst_chrom_t &worst_chrom) {
+	int temp_fit[3] = {0, 0, 0};
+	for (int i = 0; i < 3; ++i) {
+		worst_chrom.fitness[i] = 0;
+		worst_chrom.id[i] = -1;
+	}
+	for (std::list<int>::iterator it1 = list.begin(); it1 != list.end(); ++it1) {
+		//don't calculate fitness for courses that has constraint. We cannot change them, so focus on
+		//the ones that we can change.
+		if (conf->courmat[*it1].has_constraint == 1) {
+			continue;
+		}
+		for (std::list<int>::iterator it2 = list.begin(); it2 != list.end(); ++it2) {
+			if (fit_hconfmat(*it1, *it2)) {
+				temp_fit[0]++;
+			}
+			if (fit_hsameday(*it1, *it2)) {
+				temp_fit[1]++;
+			}
+			if (fit_hmidday(*it1, *it2)) {
+				temp_fit[2]++;
+			}
+		}
+		for (int i = 0; i < 3; ++i) {
+			if (temp_fit[i] > worst_chrom.fitness[i]) {
+				worst_chrom.fitness[i] = temp_fit[i];
+				worst_chrom.id[i] = *it1;
+			}
+		}
+		for (int i = 0; i < 3; ++i) {
+			temp_fit[i] = 0;
+		}
+	}
+}
+
+void Individual::get_hardfit(list<int>& list, s_hard_fitness_t& fit) {
+	for (int i = 0; i < 3; ++i) {
+		fit.fitness[i] = 0;
+	}
+	for (std::list<int>::iterator it1 = list.begin(); it1 != list.end(); ++it1) {
+		for (std::list<int>::iterator it2 = list.begin(); it2 != list.end(); ++it2) {
+			if (fit_hconfmat(*it1, *it2)) {
+				fit.fitness[0]++;
+			}
+			if (fit_hsameday(*it1, *it2)) {
+				fit.fitness[1]++;
+			}
+			if (fit_hmidday(*it1, *it2)) {
+				fit.fitness[2]++;
+			}
+		}
+	}
 }
 
 } /* namespace std */
