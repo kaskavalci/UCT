@@ -25,13 +25,16 @@ private:
 	double getduration();
 	void crossover();
 	void mutation();
-	void add_new_individual(Individual&);
+	bool add_new_individual(Individual&);
 	void selection(Individual&, Individual&);
+	void tournament(Individual&);
+	int calc_nitch(int);
 	void hillclimbmix2();
 	void initpareto();
 	bool foundinpar(int);
 	void selection_old(Individual&, Individual&);
 
+	int fit_table[POPUL][4];
 	time_t start;
 	bool inpf3[POPUL];
 	vector<int> paretof;

@@ -48,7 +48,8 @@ public:
 	float mutg3rate;
 	float mutg5rate;
 	float insert_popul_rate;
-	int paretof_pspace;
+	int crowding_dist;
+	int hc_max_ind;
 
 };
 

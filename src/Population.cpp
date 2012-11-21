@@ -12,6 +12,7 @@
 #include <time.h>
 #include <stdio.h>
 #include "Mutation.h"
+#include <set>
 
 namespace std {
 
@@ -24,6 +25,7 @@ Population::Population(Common *conf) {
 	for (i = 0; i < POPUL; ++i) {
 		pop.push_back(Individual(conf));
 		pop[i].buildtimetable();
+		pop[i].updatefitness();
 	}
 	initpareto();
 }
@@ -40,36 +42,147 @@ void Population::hillclimbmix2() {
 		}
 	}
 }
+/*
+ * Calculates nitch value from crowding distance variable. Iterate all individuals in population and count how many of them
+ * are in crowding distance.
+ */
+int Population::calc_nitch(int idx) {
+	Individual* subject = &pop[idx];
+	Individual *target;
+	int count = 0;
+
+	int hard1l = subject->fitnessh - conf->crowding_dist, hard1h = subject->fitnessh + conf->crowding_dist;
+	int hard2l = subject->fitnessh1 - conf->crowding_dist, hard2h = subject->fitnessh1 + conf->crowding_dist;
+	int soft1l = subject->fitnessf - conf->crowding_dist, soft1h = subject->fitnessf + conf->crowding_dist;
+	int soft2l = subject->fitnessf2 - conf->crowding_dist, soft2h = subject->fitnessf2 + conf->crowding_dist;
+
+	for (int i = 0; i < POPUL; ++i) {
+		if (i == idx) continue;
+		target = &pop[i];
+
+		if (target->fitnessh < hard1h && target->fitnessh > hard1l &&
+				target->fitnessh1 < hard2h && target->fitnessh1 > hard2l &&
+				target->fitnessf < soft1h && target->fitnessf > soft1l &&
+				target->fitnessf2 < soft2h && target->fitnessf2 > soft2l) {
+			count++;
+		}
+	}
+	return count;
+}
+
+void Population::tournament(Individual& parent) {
+	set<int> selection_pool;
+	//get unique IDs
+	while (selection_pool.size() < TOURNAMENT_POOLSIZE) {
+		selection_pool.insert(RND(POPUL));
+	}
+	//get TOURNAMENT_CANDIDATE_N unique candidates for comparation
+	set<int> candidate;
+	int domination[TOURNAMENT_CANDIDATE_N] = {};
+	while (candidate.size() < TOURNAMENT_CANDIDATE_N) {
+		candidate.insert(RND(POPUL));
+	}
+	int i;
+	set<int>::iterator ite = selection_pool.end();
+	set<int>::iterator itc;
+	set<int>::iterator itec = candidate.end();
+	for (set<int>::iterator it = selection_pool.begin(); it != ite; ++it) {
+		i = 0;
+		for (itc = candidate.begin(); itc != itec; ++itc, ++i) {
+			if (pop[*itc].dominates(&pop[*it]) == D_TRUE) {
+				domination[i] += 2;
+			}
+			else if (pop[*itc].dominates(&pop[*it]) == D_OUT_RANGE) {
+				domination[i]++;
+			}
+		}
+	}
+	int max = 0, maxid = -1;
+	bool equal_domination = false;
+	for (i = 0; i < TOURNAMENT_CANDIDATE_N; ++i) {
+		if (domination[i] > max) {
+			max = domination[i];
+			maxid = i;
+		}
+		//we have individuals that have same domination values.
+		else if (domination[i] == max) {
+			equal_domination = true;
+		}
+	}
+	itc = candidate.begin();
+	if (maxid != -1) {
+		advance(itc, maxid);
+		parent = pop[*itc];
+		return;
+	}
+	else if (maxid == -1 || equal_domination) {
+		int min_nitch = POPUL * 2; //give min a high number
+		set<int>::iterator it_min = itec = candidate.end();
+		int dummy;
+		//find the candiate that have least individuals surrounding it.
+		for (itc = candidate.begin(); itc != itec; ++itc) {
+			if ((dummy = calc_nitch(*itc)) < min_nitch) {
+				min_nitch = dummy;
+				it_min = itc;
+			}
+		}
+		//YAY! we found the minimum.
+		if (it_min != candidate.end()) {
+			parent = pop[*itc];
+		}
+		//This is odd. We should have found something. For the sake of stability, select a random candidate
+		else {
+			cerr << "No suitable candidate from tournament." << endl;
+			itc = candidate.begin();
+			advance(itc, RND(TOURNAMENT_CANDIDATE_N));
+			parent = pop[*itc];
+		}
+	}
+}
 
 void Population::selection(Individual&parent1, Individual&parent2) {
-	//select
+	tournament(parent1);
+	tournament(parent2);
 }
+
+int cross_suc = 0, cross_fail = 0, add_suc = 0, add_fail = 0, hc_suc = 0, hc_fail = 0;
 
 void Population::crossover() {
 	int crossrate = (int) (POPUL * conf->crrate / 2);
 	Individual parent1(conf), parent2(conf), child(conf);
-
+	int old, now;
 	for (int i = 0; i < crossrate; ++i) {
 		//todo: selection, tournament.
-		selection_old(parent1, parent2);
+		selection(parent1, parent2);
 		child.cross(parent1, parent2);
-		child.hc_worstsection();
 		child.buildtimetable();
-		add_new_individual(child);
+		child.updatefitness();
+		old = child.fitnessh + child.fitnessh1;
+		if (old < parent1.fitnessh + parent1.fitnessh1 && old < parent2.fitnessh + parent2.fitnessh1) {
+			cross_suc++;
+		}
+		else cross_fail++;
+
+		child.hc_worstsection();
+		now = child.fitnessh + child.fitnessh1;
+		if (now < old) hc_suc++;
+		else hc_fail++;
+
+		if (add_new_individual(child)) add_suc++;
+		else add_fail++;
 	}
 }
 
 //adds the given individual to population and update pareto.
-void Population::add_new_individual(Individual& candidate) {
+bool Population::add_new_individual(Individual& candidate) {
 	for (int i = 0; i < POPUL; ++i) {
 		if (candidate.dominates(&pop[i]) == D_TRUE) {
 			if (!inpf3[i]) {
 				pop[i] = candidate;
 				initpareto();
-				return;
+				return true;
 			}
 		}
-
 	}
 	//if we have reached this line, then there is no domination. give a slight chance for
 	//weak individual "candidate" to be inserted into population.
@@ -81,6 +194,7 @@ void Population::add_new_individual(Individual& candidate) {
 		} while (inpf3[rnd_pos]);
 		pop[rnd_pos] = candidate;
 	}
+	return false;
 }
 /*
  * mutate every individual with a rate of given mutation rates, except for pareto front.
@@ -94,6 +208,7 @@ void Population::mutation() {
 		//if any mutation occured, re-build timetable.
 		if (mutator.mutate_all()) {
 			pop[i].buildtimetable();
+			pop[i].updatefitness();
 		}
 	}
 }
@@ -227,6 +342,7 @@ void Population::run(int seed) {
 		smallest = 20000;
 		smallestidx = -1;
 		int fit6 = 20000;
+
 		if (it % 20 == 0) {
 			for (m = 0; m < paretof.size(); m++) {
 				fit = pop[paretof[m]].fitnessh + pop[paretof[m]].fitnessh1;
@@ -297,16 +413,18 @@ void Population::run(int seed) {
 	}
 	fstream fresult;
 	fresult.open("result.txt", fstream::app | fstream::out);
-	fresult << "asdasdasd";
-	fresult << "hard1:" << pop[paretof[smallestidx]].fitnessh << " hard2:" << pop[paretof[smallestidx]].fitnessh1
-			<< " soft1:" << pop[paretof[smallestidx]].fitnessf << " soft2:" << pop[paretof[smallestidx]].fitnessf2
-			<< " duration: " << duration << "hillrnd: " << conf->hillrnd << "hillboth:" << conf->hillboth
-			<< "mutrate:" << conf->mutg1rate << " crrate:" << conf->crrate << " insertRate:" << conf->insert_popul_rate
-			<< "pspace:" << conf->paretof_pspace  << " seed:" << seed << endl;
+	fresult << "hard1:" << pop[paretof[smallestidx]].fitnessh << "\thard2:" << pop[paretof[smallestidx]].fitnessh1
+			<< "\tsoft1:" << pop[paretof[smallestidx]].fitnessf << "\tsoft2:" << pop[paretof[smallestidx]].fitnessf2
+			<< "\tduration: " << duration << "\thillrnd: " << conf->hillrnd << "\thillboth:" << conf->hillboth
+			<< "\tmutrate:" << conf->mutg1rate << "\tcrrate:" << conf->crrate << "\tinsertRate:" << conf->insert_popul_rate
+			<< "\tpspace:" << conf->crowding_dist  << "\tseed:" << seed << endl;
+	cout << "Crossover" << endl << "success:" << cross_suc << " fail:" << cross_fail << endl;
+	cout << "HC" << endl << "success:" << hc_suc << " fail:" << hc_fail << endl;
+	cout << "add to pop" << endl << "success:" << add_suc << " fail:" << add_fail << endl;
 	fresult.flush();
+	fresult.close();
 	duration = getduration();
 	printf("\n\nThe operation completed in %.2lf seconds.\n", duration);
-	fresult.close();
 }
 
 } /* namespace std */

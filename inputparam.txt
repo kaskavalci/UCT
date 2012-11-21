@@ -1,11 +1,12 @@
-dur		1000
+dur		500
 
 hillsize	1.00
 hillrnd		0.2
 hillboth	0.2
-mutg1rate	0.3
-mutg3rate	0.3
-mutg5rate	0.3
+mutg1rate	0.08
+mutg3rate	0.08
+mutg5rate	0.08
 crrate		0.9
 randomly_insert_to_population	0.005
-paretofront_personalspace	3
+crowding_dist	6
+hc_max_ind	10

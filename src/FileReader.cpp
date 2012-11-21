@@ -80,7 +80,6 @@ void FileReader::readcourses() {
 	input.close();
 	Lecture tmplect;
 	for (i = 0; i < CHROML; i++) {
-		printf("AAAAAidx cid %d %s\n", i, conf->courmat[i].cname.data());
 		conf->cid[i] = -1;
 		conf->lectid[i] = -1;
 		conf->labid[i] = -1;
@@ -199,8 +198,10 @@ void FileReader::readinputparam() {
 			conf->mutg5rate = inpval;
 		else if (!inpname.compare("randomly_insert_to_population"))
 			conf->insert_popul_rate = inpval;
-		else if (!inpname.compare("paretofront_personalspace"))
-			conf->paretof_pspace = inpval;
+		else if (!inpname.compare("crowding_dist"))
+			conf->crowding_dist = inpval;
+		else if (!inpname.compare("hc_max_ind"))
+					conf->hc_max_ind = inpval;
 	}
 	input.close();
 }

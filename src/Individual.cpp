@@ -11,6 +11,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include "FileReader.h"
+#include <set>
 
 namespace std {
 
@@ -124,6 +125,7 @@ void Individual::hc_longestslot() {
 			}
 			subject.chromosome->update(*it, selcolor);
 			subject.buildtimetable();
+			subject.updatefitness();
 
 			//if there is an improvement on subject's gene (both hard and soft), then update that value for
 			//real gene of the individual.
@@ -156,6 +158,7 @@ void Individual::hc1() {
 			continue;
 		hcchild.chromosome->update(rndidx, selcolor);
 		hcchild.buildtimetable();
+		hcchild.updatefitness();
 
 		if ((hcchild.fitnessh + hcchild.fitnessh1 < this->fitnessh + this->fitnessh1)
 				&& (hcchild.fitnessf + hcchild.fitnessf2 < this->fitnessf + this->fitnessf2)) {
@@ -180,7 +183,8 @@ void Individual::cross(Individual&p1, Individual&p2) {
 		} else {
 			chrom = p2.chromosome;
 		}
-		for (list<int>::iterator it = chrom->slot_map[i].begin(); it != chrom->slot_map[i].end(); it++) {
+		list<int>::iterator ite = chrom->slot_map[i].end();
+		for (list<int>::iterator it = chrom->slot_map[i].begin(); it != ite; it++) {
 			if (checked[*it] == false) {
 				this->chromosome->add(*it, i);
 				checked[*it] = true;
@@ -191,12 +195,12 @@ void Individual::cross(Individual&p1, Individual&p2) {
 	for (int i = 0; i < CHROML; ++i) {
 		if (checked[i] == false) {
 			switch (RND(2)) {
-				case 0:
-					chrom = p1.chromosome;
-					break;
-				case 1:
-					chrom = p2.chromosome;
-					break;
+			case 0:
+				chrom = p1.chromosome;
+				break;
+			case 1:
+				chrom = p2.chromosome;
+				break;
 			}
 			this->chromosome->add(i, chrom->get_slot(i));
 		}
@@ -204,9 +208,10 @@ void Individual::cross(Individual&p1, Individual&p2) {
 }
 
 /*
- * dominates: return 1 if "this" Individual dominates (has superior fitness) target.
- * 			return 2 if target dominates "this"
- * 			return 0 if there is no domination.
+ * dominates: return D_TRUE if "this" Individual dominates (has superior fitness) target.
+ * 			return D_FALSE if target dominates "this"
+ * 			return D_IN_RANGE if there is no domination and 2 Individual are in their crowding distance
+ * 			return D_OUT_RANGE if there is no domination and 2 Individual are NOT in their crowding distance
  */
 int Individual::dominates(Individual *target) {
 	if (this->fitnessh <= target->fitnessh && this->fitnessh1 <= target->fitnessh1
@@ -217,15 +222,15 @@ int Individual::dominates(Individual *target) {
 		return D_FALSE;
 	//todo: daha düzenli yaz.
 	//represent fitness values as multi-dimensional rectangle.
-	int my_x1 = this->fitnessh - conf->paretof_pspace, my_x2 = this->fitnessh + conf->paretof_pspace;
-	int my_y1 = this->fitnessh1 - conf->paretof_pspace, my_y2 = this->fitnessh1 + conf->paretof_pspace;
-	int my_z1 = this->fitnessf - conf->paretof_pspace, my_z2 = this->fitnessf + conf->paretof_pspace;
-	int my_w1 = this->fitnessf2 - conf->paretof_pspace, my_w2 = this->fitnessf2 + conf->paretof_pspace;
+	int my_x1 = this->fitnessh - conf->crowding_dist, my_x2 = this->fitnessh + conf->crowding_dist;
+	int my_y1 = this->fitnessh1 - conf->crowding_dist, my_y2 = this->fitnessh1 + conf->crowding_dist;
+	int my_z1 = this->fitnessf - conf->crowding_dist, my_z2 = this->fitnessf + conf->crowding_dist;
+	int my_w1 = this->fitnessf2 - conf->crowding_dist, my_w2 = this->fitnessf2 + conf->crowding_dist;
 
-	int tr_x1 = target->fitnessh - conf->paretof_pspace, tr_x2 = target->fitnessh + conf->paretof_pspace;
-	int tr_y1 = target->fitnessh1 - conf->paretof_pspace, tr_y2 = target->fitnessh1 + conf->paretof_pspace;
-	int tr_z1 = target->fitnessf - conf->paretof_pspace, tr_z2 = target->fitnessf + conf->paretof_pspace;
-	int tr_w1 = target->fitnessf2 - conf->paretof_pspace, tr_w2 = target->fitnessf2 + conf->paretof_pspace;
+	int tr_x1 = target->fitnessh - conf->crowding_dist, tr_x2 = target->fitnessh + conf->crowding_dist;
+	int tr_y1 = target->fitnessh1 - conf->crowding_dist, tr_y2 = target->fitnessh1 + conf->crowding_dist;
+	int tr_z1 = target->fitnessf - conf->crowding_dist, tr_z2 = target->fitnessf + conf->crowding_dist;
+	int tr_w1 = target->fitnessf2 - conf->crowding_dist, tr_w2 = target->fitnessf2 + conf->crowding_dist;
 	//overlap condition
 	if (my_x1 < tr_x2 && my_x2 > tr_x1 && my_y1 < tr_y2 && my_y2 > tr_y1 && my_z1 < tr_z1 && my_z2 > tr_z1
 			&& my_w1 < tr_w1 && my_w2 > tr_w1) {
@@ -1255,11 +1260,6 @@ void Individual::buildtimetable() {
 			chromosome->update_slot(i);
 		}
 	}
-	fitnessHCAL(0);
-	fitnessFCAL(0);
-	fitnessF1CAL(0);
-	fitnessF2CAL(0);
-	fitnessF3CAL(0);
 }
 
 int Individual::findcourse(int sem, int dy, int slt) {
@@ -1392,65 +1392,73 @@ bool Individual::fit_sdepmeet(int i) {
 
 void Individual::hc_worstsection() {
 	Individual subject(*this);
-	s_worst_chrom_t worst_sec;
-	s_hard_fitness_t oldfit, newfit;
-	int rnd_slot;
-	int max_attempt = 10; //no infinite loop if we have perfect individual.
-	//try to find a slot that has conflicts.
-	do {
-		rnd_slot = RND(NCOL);
-		get_hardfit(*subject.chromosome->get_section_list(rnd_slot), worst_sec);
-		max_attempt--;
-	} while (worst_sec.id[0] == -1 && worst_sec.id[1] == -1 && worst_sec.id[2] != -1 && max_attempt > 0);
+	s_hard_fitness_t oldfit, newfit, rndfit;
+	int rnd_slot = 0;
+	int max_attempt = conf->hc_max_ind; //no infinite loop if we have perfect individual.
+	int maxdiff, maxid;
+	bool somechanges;
 
-	if (!max_attempt) {
-		//yay! perfect individual. no need for hill climbing!
-		return;
-	}
-	int maxdiff[3] = {0,0,0}, maxid[3] = {-1, -1, -1};
+	bool visitlist[CHROML] = {};
 
-	for (int selcolor = 0; selcolor < no_colors; selcolor++) {
-		//mutate the child's gene in the longest_slot list for every color except for its own
-		if (selcolor == rnd_slot) {
-			continue;
+	for (int i = 0; i < conf->hc_max_ind; ++i) {
+		//try to find a slot that has conflicts.
+		while(max_attempt > 0) {
+			rnd_slot = RND(NCOL);
+			get_hardfit(*subject.chromosome->get_section_list(rnd_slot), rndfit);
+			if (rndfit.total_fit > 0) break;
+
+			max_attempt--;
 		}
-		//restore old fitness of selcolor
-		get_hardfit(*subject.chromosome->get_section_list(selcolor), oldfit);
-		//update the gene to selcolor, if we have any "worst" color.
-		for (int i = 0; i < 3; ++i) {
-			if (worst_sec.id[i] != -1) {
-				subject.chromosome->update(worst_sec.id[i], selcolor);
+		if (!max_attempt) {
+			//yay! perfect individual. no need for hill climbing!
+			return;
+		}
+
+		int sectid, maxtry = 3;
+		do {
+			list<int>::iterator it = chromosome->slot_map[rnd_slot].begin();
+			advance(it, RND(chromosome->slot_map[rnd_slot].size()));
+			sectid = *it;
+			maxtry--;
+		} while (visitlist[sectid] && maxtry > 0);
+		//if we haven't found any non visited member on that section, proceed to another random section
+		if (!maxtry) continue;
+
+		maxdiff = 0;
+		maxid = -1;
+		for (int selcolor = 0; selcolor < no_colors; selcolor++) {
+			//mutate the child's gene in the longest_slot list for every color except for its own
+			if (selcolor == rnd_slot) {
+				continue;
 			}
-		}
-		//get the new fitness for comparison
-		get_hardfit(*subject.chromosome->get_section_list(selcolor), newfit);
+			//restore old fitness of selcolor
+			get_hardfit(*subject.chromosome->get_section_list(selcolor), oldfit);
+			//update the gene to selcolor, if we have any "worst" color.
+			subject.chromosome->update(sectid, selcolor);
+			//get the new fitness for comparison
+			get_hardfit(*subject.chromosome->get_section_list(selcolor), newfit);
 
-		for (int i = 0; i < 3; ++i) {
-			if (worst_sec.id[i] != -1 && (oldfit.fitness[i] - newfit.fitness[i]) > maxdiff[i]) {
-				maxdiff[i] = oldfit.fitness[i] - newfit.fitness[i];
-				maxid[i] = selcolor;
+			if ((oldfit.fitness[i] - newfit.fitness[i]) > maxdiff) {
+				maxdiff = oldfit.total_fit - newfit.total_fit;
+				maxid = selcolor;
 			}
+			//un-stage changes
+			subject.chromosome->update(sectid, rnd_slot);
 		}
-		//un-stage changes
-		for (int i = 0; i < 3; ++i) {
-			if (worst_sec.id[i] != -1) {
-				subject.chromosome->update(worst_sec.id[i], rnd_slot);
-			}
-		}
-	}
 
-	bool somechanges = false;
-	//if difference is larger than 0, then we found a better slot for that section.
-	for (int i = 0; i < 3; ++i) {
-		if (maxdiff[i] > 0) {
-			chromosome->update(worst_sec.id[i], maxid[i]);
+		somechanges = false;
+		//if difference is larger than 0, then we found a better slot for that section.
+		if (maxdiff > 0) {
+			chromosome->update(sectid, maxid);
 			somechanges = true;
 		}
+		//todo: updatefitness'ý deðiþtir. modüler fitness tut, herþeyi baþtan hesaplama.
+		if (somechanges) {
+			buildtimetable();
+			updatefitness();
+		}
 	}
-	//todo: updatefitness'ý deðiþtir. modüler fitness tut, herþeyi baþtan hesaplama.
-	if (somechanges) {
-		updatefitness();
-	}
+
 }
 
 bool Individual::fit_slabconf(int i, int j) {
@@ -1468,18 +1476,19 @@ bool Individual::fit_slabconf(int i, int j) {
  * and find the worst gene in it. Also compute fitness of the slot.
  */
 void Individual::get_hardfit(list<int> &list, s_worst_chrom_t &worst_chrom) {
-	int temp_fit[3] = {0, 0, 0};
-	for (int i = 0; i < 3; ++i) {
+	int temp_fit[HARD_FIT_N] = { };
+	for (int i = 0; i < HARD_FIT_N; ++i) {
 		worst_chrom.fitness[i] = 0;
 		worst_chrom.id[i] = -1;
 	}
-	for (std::list<int>::iterator it1 = list.begin(); it1 != list.end(); ++it1) {
+	std::list<int>::iterator it1e = list.end();
+	for (std::list<int>::iterator it1 = list.begin(); it1 != it1e; ++it1) {
 		//don't calculate fitness for courses that has constraint. We cannot change them, so focus on
 		//the ones that we can change.
 		if (conf->courmat[*it1].has_constraint == 1) {
 			continue;
 		}
-		for (std::list<int>::iterator it2 = list.begin(); it2 != list.end(); ++it2) {
+		for (std::list<int>::iterator it2 = list.begin(); it2 != it1e; ++it2) {
 			if (fit_hconfmat(*it1, *it2)) {
 				temp_fit[0]++;
 			}
@@ -1490,34 +1499,44 @@ void Individual::get_hardfit(list<int> &list, s_worst_chrom_t &worst_chrom) {
 				temp_fit[2]++;
 			}
 		}
-		for (int i = 0; i < 3; ++i) {
+		for (int i = 0; i < HARD_FIT_N; ++i) {
 			if (temp_fit[i] > worst_chrom.fitness[i]) {
 				worst_chrom.fitness[i] = temp_fit[i];
 				worst_chrom.id[i] = *it1;
 			}
 		}
-		for (int i = 0; i < 3; ++i) {
+		for (int i = 0; i < HARD_FIT_N; ++i) {
 			temp_fit[i] = 0;
 		}
 	}
 }
 
 void Individual::get_hardfit(list<int>& list, s_hard_fitness_t& fit) {
-	for (int i = 0; i < 3; ++i) {
+	int i;
+	for (i = 0; i < HARD_FIT_N; ++i) {
 		fit.fitness[i] = 0;
 	}
-	for (std::list<int>::iterator it1 = list.begin(); it1 != list.end(); ++it1) {
-		for (std::list<int>::iterator it2 = list.begin(); it2 != list.end(); ++it2) {
-			if (fit_hconfmat(*it1, *it2)) {
+	fit.total_fit = 0;
+	std::list<int>::iterator ite = list.end();
+	std::set<int> visit_set;
+	for (std::list<int>::iterator it = list.begin(); it != ite; ++it) {
+		for (i = 0; i < POPUL; ++i) {
+			if (*it == i || visit_set.find(i) != visit_set.end())
+				continue;
+			if (fit_hconfmat(*it, i)) {
 				fit.fitness[0]++;
 			}
-			if (fit_hsameday(*it1, *it2)) {
+			if (fit_hsameday(*it, i)) {
 				fit.fitness[1]++;
 			}
-			if (fit_hmidday(*it1, *it2)) {
+			if (fit_hmidday(*it, i)) {
 				fit.fitness[2]++;
 			}
 		}
+		visit_set.insert(*it);
+	}
+	for (int i = 0; i < HARD_FIT_N; ++i) {
+		fit.total_fit += fit.fitness[i];
 	}
 }
 

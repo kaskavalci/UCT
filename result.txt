@@ -15,3 +15,11 @@ hard soft      0      4   dur  1200 seed            3
 hard soft      0      4   dur  1200 seed            3 
 hard soft      5     12   dur  1200 seed            0 
 hard1:119 hard2:49 soft1:12 soft2:134 duration: 1001hillrnd: 0.2hillboth:0.2mutrate:0.3 crrate:0.9 insertRate:0.005pspace:3 seed:1353363277
+hard1:54 hard2:6 soft1:28 soft2:52 duration: 301hillrnd: 0.2hillboth:0.2mutrate:0.3 crrate:0.9 insertRate:0.005pspace:3 seed:1353443161
+hard1:54 hard2:5 soft1:29 soft2:46 duration: 301hillrnd: 0.2hillboth:0.2mutrate:0.3 crrate:0.9 insertRate:0.005pspace:3 seed:1353443187
+hard1:75	hard2:21	soft1:17	soft2:73	duration: 301	hillrnd: 0.2	hillboth:0.2	mutrate:0.3	crrate:0.9	insertRate:0.005	pspace:6	seed:1353443955
+hard1:62	hard2:13	soft1:22	soft2:61	duration: 301	hillrnd: 0.2	hillboth:0.2	mutrate:0.3	crrate:0.9	insertRate:0.005	pspace:6	seed:1353445791
+hard1:59	hard2:12	soft1:15	soft2:61	duration: 301	hillrnd: 0.2	hillboth:0.2	mutrate:0.3	crrate:0.9	insertRate:0.005	pspace:6	seed:1353535979
+hard1:58	hard2:13	soft1:7	soft2:55	duration: 501	hillrnd: 0.2	hillboth:0.2	mutrate:0.3	crrate:0.9	insertRate:0.005	pspace:6	seed:1353538955
+hard1:57	hard2:5	soft1:24	soft2:47	duration: 501	hillrnd: 0.2	hillboth:0.2	mutrate:0.08	crrate:0.9	insertRate:0.005	pspace:6	seed:1353539769
+hard1:82	hard2:21	soft1:11	soft2:74	duration: 501	hillrnd: 0.2	hillboth:0.2	mutrate:0.08	crrate:0.9	insertRate:0.005	pspace:6	seed:1353540543

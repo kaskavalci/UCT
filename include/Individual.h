@@ -41,6 +41,7 @@ public:
 	void printlect();
 	void printdekanlik();
 	Chromosome* getChromosome();
+	void updatefitness();
 
 	int fitnessh;
 	int fitnessh1;
@@ -49,17 +50,18 @@ public:
 
 private:
 	typedef struct {
-		int id[3];
-		int fitness[3];
+		int id[HARD_FIT_N];
+		int fitness[HARD_FIT_N];
+		int total_fit;
 	} s_worst_chrom_t;
 
 	typedef struct {
-		int fitness[3];
+		int fitness[HARD_FIT_N];
+		int total_fit;
 	} s_hard_fitness_t;
 
 	int findcourse(int sem, int dy, int slt);
 	int decode(int);
-	void updatefitness();
 	bool fit_hconfmat(int i,int j);
 	bool fit_hsameday(int i, int j);
 	bool fit_hmidday(int i, int j);
