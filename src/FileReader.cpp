@@ -201,7 +201,9 @@ void FileReader::readinputparam() {
 		else if (!inpname.compare("crowding_dist"))
 			conf->crowding_dist = inpval;
 		else if (!inpname.compare("hc_max_ind"))
-					conf->hc_max_ind = inpval;
+			conf->hc_max_ind = inpval;
+		else if (!inpname.compare("verbose_level"))
+			conf->verbose_level = inpval;
 	}
 	input.close();
 }

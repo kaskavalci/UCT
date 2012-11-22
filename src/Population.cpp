@@ -176,8 +176,8 @@ void Population::crossover() {
 //adds the given individual to population and update pareto.
 bool Population::add_new_individual(Individual& candidate) {
 	for (int i = 0; i < POPUL; ++i) {
-		if (candidate.dominates(&pop[i]) == D_TRUE) {
-			if (!inpf3[i]) {
+		if (!inpf3[i]) {
+			if (candidate.dominates(&pop[i]) == D_TRUE) {
 				pop[i] = candidate;
 				initpareto();
 				return true;
@@ -309,6 +309,8 @@ void Population::initpareto() {
 						//pareto front should have diversity, thus we replace it with new Individual
 						if (pop[paretof[k]].dominates(&pop[paretof[m]]) == D_IN_RANGE) {
 							pop[paretof[k]] = pop[i];
+							inpf3[k] = false;
+							inpf3[i] = true;
 						}
 					}
 				}
@@ -332,6 +334,10 @@ void Population::run(int seed) {
 	int fit;
 	size_t m;
 
+	if (conf->verbose_level == 2) {
+		cout << "Smallest hard fitness" << endl;
+	}
+
 	while ((int) duration <= conf->dur) {
 		it++;
 		duration = getduration();
@@ -350,8 +356,10 @@ void Population::run(int seed) {
 				fith1 = pop[paretof[m]].fitnessh1;
 				fit2 = pop[paretof[m]].fitnessf;
 				fit4 = pop[paretof[m]].fitnessf2;
-				printf("fitness: %d \tfith: %d\tfith1: %d \tfitf: %d \tfitf1: %d\n", m, fith0, fith1, fit2,
-						fit4);
+				if (conf->verbose_level == 1) {
+					cout << "id: " << m << "\tfith1:" << fith0 << "\tfith2:" << fith1 <<
+						"\tfits1:" << fit2 << "\tfits2:" << fit4 << endl;
+				}
 				if (fit < smallest) {
 					smallest = fit;
 					smallestidx = m;
@@ -361,9 +369,18 @@ void Population::run(int seed) {
 					smallestidx = m;
 					fit6 = fit + fit2 + fit4;
 				}
+				if (conf->verbose_level == 2) {
+					cout << smallest << endl;
+					cout << "Crossover" << endl << "success:" << cross_suc << " fail:" << cross_fail << endl;
+						cout << "HC" << endl << "success:" << hc_suc << " fail:" << hc_fail << endl;
+						cout << "add to pop" << endl << "success:" << add_suc << " fail:" << add_fail << endl;
+
+				}
 			}
-			printf("# of iterations %d duration %d\n", it, (int) duration);
-			printf("# smallest  %d \n", smallestidx);
+			if (conf->verbose_level == 1) {
+				cout << "# of iterations " << it << " duration " << duration << endl;
+				cout << "# smallest " << smallestidx << endl;
+			}
 		}
 		crossover();
 		hillclimbmix2();

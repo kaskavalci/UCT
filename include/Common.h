@@ -50,6 +50,7 @@ public:
 	float insert_popul_rate;
 	int crowding_dist;
 	int hc_max_ind;
+	int verbose_level;
 
 };
 
