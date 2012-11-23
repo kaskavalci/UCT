@@ -25,14 +25,16 @@ private:
 	double getduration();
 	void crossover();
 	void mutation();
-	bool add_new_individual(Individual&);
+	bool add_to_population(Individual&);
+	bool add_to_pareto(int);
 	void selection(Individual&, Individual&);
 	void tournament(Individual&);
 	int calc_nitch(int);
+	int calc_crowd(int);
 	void hillclimbmix2();
-	void initpareto();
 	bool foundinpar(int);
 	void selection_old(Individual&, Individual&);
+	void print_stat();
 
 	int fit_table[POPUL][4];
 	time_t start;
@@ -42,6 +44,8 @@ private:
 	vector<Individual> pop;
 	int crossel1;
 	int crossel2;
+
+	int cross_suc, cross_fail, add_suc, add_fail, hc_suc, hc_fail, par_suc, par_fail, mut_suc, mut_fail;
 };
 
 } /* namespace std */

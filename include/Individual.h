@@ -18,13 +18,13 @@ namespace std {
 class Individual {
 public:
 	Individual(Common *conf);
+	Individual();
 	Individual& operator= (const Individual &source);
 	Individual(const Individual&);
 	virtual ~Individual();
 
-	void hc1();
-	void hc_longestslot();
-	void hc_worstsection();
+	bool hc1();
+	bool hc_worstsection();
 
 	bool equalsh(Individual&, Individual&);
 	bool equalss(Individual&, Individual&);
@@ -42,6 +42,10 @@ public:
 	void printdekanlik();
 	Chromosome* getChromosome();
 	void updatefitness();
+
+	void setConf(Common*& conf) {
+		this->conf = conf;
+	}
 
 	int fitnessh;
 	int fitnessh1;

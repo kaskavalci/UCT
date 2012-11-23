@@ -1,13 +1,13 @@
-dur	500
+dur	150
 
 hillsize	1.00
-hillrnd	0.8
-hillboth	0.8
-mutg1rate	0.008
-mutg3rate	0.008
-mutg5rate	0.008
+hillrnd	0.4
+hillboth	0.4
+mutg1rate	0.004
+mutg3rate	0.004
+mutg5rate	0.004
 crrate	0.9
 randomly_insert_to_population	0.005
-crowding_dist	6
+crowding_dist	3
 hc_max_ind	10
 verbose_level	2
