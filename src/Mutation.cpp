@@ -38,7 +38,7 @@ bool Mutation::mutateg1() {
 	int col1, col2, i, k;
 	bool retval = false;
 	for (k = 0; k < chromosome->chrom_length; k++) {
-		if (RND(1000000) > 1000000 * conf->mutg1rate)
+		if (RND(1000000) >= 1000000 * conf->mutg1rate)
 			continue;
 		col1 = chromosome->get_slot(k);
 		col2 = RND(chromosome->no_colors);
@@ -61,7 +61,7 @@ bool Mutation::mutateg3() {
 	int val1, val2;
 	bool retval = false;
 	for (k = 0; k < chromosome->chrom_length; k++) {
-		if (RND(1000000) > 1000000 * conf->mutg3rate)
+		if (RND(1000000) >= 1000000 * conf->mutg3rate)
 			continue;
 		pos1 = k;
 		pos2 = RND(chromosome->chrom_length);
@@ -86,7 +86,7 @@ bool Mutation::mutateg5() {
 	int val1, val2, val3;
 	bool retval = false;
 	for (k = 0; k < chromosome->chrom_length; k++) {
-		if (RND(1000000) > 1000000 * conf->mutg5rate)
+		if (RND(1000000) >= 1000000 * conf->mutg5rate)
 			continue;
 		pos1 = k;
 		pos2 = RND(chromosome->chrom_length);

@@ -11,6 +11,7 @@
 #include <fstream>
 #include <iostream>
 #include <string.h>
+#include <sstream>
 
 namespace std {
 
@@ -174,12 +175,16 @@ void FileReader::readcourses() {
 	fflush(stdout);
 }
 void FileReader::readinputparam() {
-	ifstream input;
-	input.open("inputparam.txt");
+	fstream input("inputparam.txt");
 	string inpname;
 	float inpval;
-	while (!input.eof()) {
-		input >> inpname >> inpval;
+	string line;
+	stringstream ss (stringstream::in | stringstream::out);
+	while (getline(input, line)) {
+		if (line[0] == '#' || line.empty()) continue;
+		ss << line;
+		ss >> inpname >> inpval;
+		ss.clear();
 		if (!inpname.compare("dur"))
 			conf->dur = inpval;
 		else if (!inpname.compare("hillsize"))

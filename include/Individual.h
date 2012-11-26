@@ -29,13 +29,13 @@ public:
 	bool equalsh(Individual&, Individual&);
 	bool equalss(Individual&, Individual&);
 
-	void cross(Individual&, Individual&);
+	void cross(Individual*, Individual*);
 	int fitnessHCAL(int);
 	int fitnessFCAL(int);
 	int fitnessF1CAL(int);
 	int fitnessF2CAL(int);
 	int fitnessF3CAL(int);
-	int dominates(Individual *target);
+	int dominates(const Individual *target);
 	void buildtimetable();
 	void printtable();
 	void printlect();

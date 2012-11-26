@@ -24,6 +24,7 @@ Population::Population(Common *conf) {
 	this->conf = conf;
 	crossel1 = crossel2 = 0;
 
+	updatePareto = false;
 	cross_suc = 0;
 	cross_fail = 0;
 	add_suc = 0;
@@ -34,11 +35,11 @@ Population::Population(Common *conf) {
 	par_fail = 0;
 	mut_suc = 0;
 	mut_fail = 0;
-
 	for (i = 0; i < POPUL; ++i) {
-		pop.push_back(Individual(conf));
-		pop[i].buildtimetable();
-		pop[i].updatefitness();
+		inpf3[i] = false;
+		pop.push_back(new Individual(conf));
+		pop[i]->buildtimetable();
+		pop[i]->updatefitness();
 		add_to_pareto(i);
 	}
 }
@@ -48,12 +49,14 @@ Population::~Population() {
 }
 
 void Population::hillclimbmix2() {
-	int m;
-	for (m = 0; m < POPUL * conf->hillsize; m++) {
+	int i;
+	for (i = 0; i < POPUL * conf->hillsize; i++) {
 		if (RND(1000) < 1000 * conf->hillboth) {
-			if (pop[m].hc_worstsection()) {
-				if (add_to_pareto(m)) par_suc++;
-				else par_fail++;
+			if (pop[i]->hc1()) {
+				if (add_to_pareto(i))
+					par_suc++;
+				else
+					par_fail++;
 			}
 		}
 	}
@@ -63,7 +66,7 @@ void Population::hillclimbmix2() {
  * are in crowding distance.
  */
 int Population::calc_nitch(int idx) {
-	Individual* subject = &pop[idx];
+	Individual* subject = pop[idx];
 	Individual *target;
 	int count = 0;
 
@@ -73,13 +76,13 @@ int Population::calc_nitch(int idx) {
 	int soft2l = subject->fitnessf2 - conf->crowding_dist, soft2h = subject->fitnessf2 + conf->crowding_dist;
 
 	for (int i = 0; i < POPUL; ++i) {
-		if (i == idx) continue;
-		target = &pop[i];
+		if (i == idx)
+			continue;
+		target = pop[i];
 
-		if (target->fitnessh < hard1h && target->fitnessh > hard1l &&
-				target->fitnessh1 < hard2h && target->fitnessh1 > hard2l &&
-				target->fitnessf < soft1h && target->fitnessf > soft1l &&
-				target->fitnessf2 < soft2h && target->fitnessf2 > soft2l) {
+		if (target->fitnessh < hard1h && target->fitnessh > hard1l && target->fitnessh1 < hard2h
+				&& target->fitnessh1 > hard2l && target->fitnessf < soft1h && target->fitnessf > soft1l
+				&& target->fitnessf2 < soft2h && target->fitnessf2 > soft2l) {
 			count++;
 		}
 	}
@@ -89,7 +92,7 @@ int Population::calc_nitch(int idx) {
  * Count the individuals in crowding distance in PARETO FRONT
  */
 int Population::calc_crowd(int idx) {
-	Individual* subject = &pop[idx];
+	Individual* subject = pop[idx];
 	Individual *target;
 	int count = 0;
 
@@ -99,20 +102,20 @@ int Population::calc_crowd(int idx) {
 	int soft2l = subject->fitnessf2 - conf->crowding_dist, soft2h = subject->fitnessf2 + conf->crowding_dist;
 
 	for (size_t i = 0; i < paretof.size(); ++i) {
-		if (paretof[i] == idx) continue;
-		target = &pop[paretof[i]];
+		if (paretof[i] == idx)
+			continue;
+		target = pop[paretof[i]];
 
-		if (target->fitnessh < hard1h && target->fitnessh > hard1l &&
-				target->fitnessh1 < hard2h && target->fitnessh1 > hard2l &&
-				target->fitnessf < soft1h && target->fitnessf > soft1l &&
-				target->fitnessf2 < soft2h && target->fitnessf2 > soft2l) {
+		if (target->fitnessh < hard1h && target->fitnessh > hard1l && target->fitnessh1 < hard2h
+				&& target->fitnessh1 > hard2l && target->fitnessf < soft1h && target->fitnessf > soft1l
+				&& target->fitnessf2 < soft2h && target->fitnessf2 > soft2l) {
 			count++;
 		}
 	}
 	return count;
 }
 
-void Population::tournament(Individual& parent) {
+void Population::tournament(Individual* parent) {
 	set<int> selection_pool;
 	//get unique IDs
 	while (selection_pool.size() < TOURNAMENT_POOLSIZE) {
@@ -120,7 +123,7 @@ void Population::tournament(Individual& parent) {
 	}
 	//get TOURNAMENT_CANDIDATE_N unique candidates for comparation
 	set<int> candidate;
-	int domination[TOURNAMENT_CANDIDATE_N] = {};
+	int domination[TOURNAMENT_CANDIDATE_N] = { };
 	while (candidate.size() < TOURNAMENT_CANDIDATE_N) {
 		candidate.insert(RND(POPUL));
 	}
@@ -131,7 +134,7 @@ void Population::tournament(Individual& parent) {
 	for (set<int>::iterator it = selection_pool.begin(); it != ite; ++it) {
 		i = 0;
 		for (itc = candidate.begin(); itc != itec; ++itc, ++i) {
-			if (pop[*itc].dominates(&pop[*it]) == D_TRUE) {
+			if (pop[*itc]->dominates(pop[*it]) == D_TRUE) {
 				domination[i]++;
 			}
 		}
@@ -153,8 +156,7 @@ void Population::tournament(Individual& parent) {
 		advance(itc, maxid);
 		parent = pop[*itc];
 		return;
-	}
-	else if (maxid == -1 || equal_domination) {
+	} else if (maxid == -1 || equal_domination) {
 		int min_nitch = POPUL * 2; //give min a high number
 		set<int>::iterator it_min = itec = candidate.end();
 		int dummy;
@@ -179,42 +181,63 @@ void Population::tournament(Individual& parent) {
 	}
 }
 
-void Population::selection(Individual&parent1, Individual&parent2) {
+void Population::selection(Individual*parent1, Individual*parent2) {
 	tournament(parent1);
 	tournament(parent2);
 }
 
 void Population::crossover() {
 	int crossrate = (int) (POPUL * conf->crrate / 2);
-	Individual parent1(conf), parent2(conf), child;
-	child.setConf(conf);
+	Individual *parent1 = new Individual(conf), *parent2 = new Individual(conf), *child;
+	bool create_child = true;
 	int old, now;
 	for (int i = 0; i < crossrate; ++i) {
-		//todo: selection, tournament.
-		selection(parent1, parent2);
-		child.cross(parent1, parent2);
-		child.buildtimetable();
-		child.updatefitness();
-		old = child.fitnessh + child.fitnessh1;
-		if (old < parent1.fitnessh + parent1.fitnessh1 && old < parent2.fitnessh + parent2.fitnessh1) {
-			cross_suc++;
+
+		if (create_child) {
+			child = new Individual();
+			child->setConf(conf);
+			create_child = false;
 		}
-		else cross_fail++;
 
-		child.hc_worstsection();
-		now = child.fitnessh + child.fitnessh1;
-		if (now < old) hc_suc++;
-		else hc_fail++;
+		selection(parent1, parent2);
+		child->cross(parent1, parent2);
+		child->buildtimetable();
+		child->updatefitness();
+		old = child->fitnessh + child->fitnessh1;
+		if (old < parent1->fitnessh + parent1->fitnessh1 && old < parent2->fitnessh + parent2->fitnessh1) {
+			cross_suc++;
+		} else
+			cross_fail++;
 
-		if (add_to_population(child)) add_suc++;
-		else add_fail++;
+		child->hc_worstsection();
+		now = child->fitnessh + child->fitnessh1;
+		if (now < old)
+			hc_suc++;
+		else
+			hc_fail++;
+
+		if (add_to_population(child)) {
+			create_child = true;
+			add_suc++;
+		} else {
+			add_fail++;
+		}
 	}
+	if (!create_child) {
+		delete (child);
+	}
+	delete (parent1);
+	delete (parent2);
 }
-
 
 bool Population::add_to_pareto(int idx) {
 	int domination;
 	vector<int> non_dominated_ind;
+	//if individual is already in pareto front, return true
+	if (inpf3[idx] == true) {
+		updatePareto = true;
+		return true;
+	}
 	//if pareto front is empty add the individual directly
 	if (paretof.size() == 0) {
 		inpf3[idx] = true;
@@ -222,16 +245,21 @@ bool Population::add_to_pareto(int idx) {
 		return true;
 	}
 	for (size_t i = 0; i < paretof.size(); i++) {
-		domination = pop[idx].dominates(&pop[paretof[i]]);
+		domination = pop[idx]->dominates(pop[paretof[i]]);
 		//candidate dominated perato front. update it.
 		if (domination == D_TRUE) {
+			if (pop[paretof[i]]->fitnessh + pop[paretof[i]]->fitnessh1 < pop[idx]->fitnessh + pop[idx]->fitnessh1) {
+				cerr << "true domination " << pop[paretof[i]]->fitnessh + pop[paretof[i]]->fitnessh1 << "\t"
+						<< pop[idx]->fitnessh + pop[idx]->fitnessh1 << endl;
+			}
 			inpf3[idx] = true;
 			inpf3[paretof[i]] = false;
 			paretof[i] = idx;
+			updatePareto = true;
 			return true;
 		}
 		//no domination. add the individuals that does not dominate each other
-		else if (domination == D_NO_HARDDOMINATION){
+		else if (domination == D_NO_HARDDOMINATION) {
 			non_dominated_ind.push_back(i);
 		}
 		//candidate is dominated by some individual in pareto front. candidate is not entitled to enter pareto front
@@ -247,11 +275,12 @@ bool Population::add_to_pareto(int idx) {
 	if (paretof.size() < PARETO_SIZE && non_dominated_ind.size() > 0) {
 		inpf3[idx] = true;
 		paretof.push_back(idx);
+		updatePareto = true;
 		return true;
 	}
 	//pareto front is full and candidate cannot be dominated by pareto front. Find a suitable individual from pareto front
 	//that have crowded area.
-	if (paretof.size() >= PARETO_SIZE && non_dominated_ind.size() > 0 ) {
+	if (paretof.size() >= PARETO_SIZE && non_dominated_ind.size() > 0) {
 		int max = 0, maxid = -1, dummy;
 		for (size_t i = 0; i < non_dominated_ind.size(); ++i) {
 			if ((dummy = calc_crowd(paretof[non_dominated_ind[i]])) > max) {
@@ -261,31 +290,32 @@ bool Population::add_to_pareto(int idx) {
 		}
 		//we found something!
 		if (max != 0) {
-			if (pop[paretof[maxid]].fitnessh + pop[paretof[maxid]].fitnessh1 < pop[idx].fitnessh + pop[idx].fitnessh1) {
+			if (pop[paretof[maxid]]->fitnessh + pop[paretof[maxid]]->fitnessh1
+					< pop[idx]->fitnessh + pop[idx]->fitnessh1) {
 				cerr << "ERROR PARETO FRONT DEFORMATION" << endl;
 			}
 			inpf3[idx] = true;
 			inpf3[paretof[maxid]] = false;
 			paretof[maxid] = idx;
+			updatePareto = true;
 			return true;
 		}
 		//we got nothing. pareto front is excellent and full. sorry new guy, you won't be VIP for this party
 		else {
 			return false;
 		}
-	}
-	else {
+	} else {
 		cerr << "Unhandled condition. Population::add_to_pareto";
 		return false;
 	}
 }
 
-
 //adds the given individual to population and update pareto.
-bool Population::add_to_population(Individual& candidate) {
+bool Population::add_to_population(Individual* candidate) {
 	for (int i = 0; i < POPUL; ++i) {
 		if (!inpf3[i]) {
-			if (candidate.dominates(&pop[i]) == D_TRUE) {
+			if (candidate->dominates(pop[i]) == D_TRUE) {
+				delete (pop[i]);
 				pop[i] = candidate;
 				if (add_to_pareto(i))
 					par_suc++;
@@ -304,7 +334,9 @@ bool Population::add_to_population(Individual& candidate) {
 		do {
 			rnd_pos = RND(POPUL);
 		} while (inpf3[rnd_pos]);
+		delete (pop[rnd_pos]);
 		pop[rnd_pos] = candidate;
+		return true;
 	}
 	return false;
 }
@@ -318,60 +350,16 @@ void Population::mutation() {
 	for (int i = 0; i < POPUL; ++i) {
 		if (inpf3[i])
 			continue;
-		mutator.setChromosome(pop[i].getChromosome());
+		mutator.setChromosome(pop[i]->getChromosome());
 		//if any mutation occured, re-build timetable.
 		if (mutator.mutate_all()) {
-			pop[i].buildtimetable();
-			pop[i].updatefitness();
+			pop[i]->buildtimetable();
+			pop[i]->updatefitness();
 			if (add_to_pareto(i))
 				mut_suc++;
-			else mut_fail++;
+			else
+				mut_fail++;
 		}
-	}
-}
-/*
- * depreciated. use selection instead
- */
-void Population::selection_old(Individual&parent1, Individual&parent2) {
-	int sel1, sel2;
-	sel1 = RND(POPUL);
-	sel2 = RND(POPUL);
-	while (sel1 == sel2) {
-		sel2 = RND(POPUL);
-	}
-	Individual p1 = pop[sel1], p2 = pop[sel2];
-
-	if (p1.dominates(&p2) == D_TRUE) {
-		parent1 = p1;
-		crossel1 = sel1;
-	} else if (p1.dominates(&p2) == D_FALSE) {
-		parent1 = p2;
-		crossel1 = sel2;
-	} else if (RND(100) < 50) {
-		parent1 = p1;
-		crossel1 = sel1;
-	} else {
-		parent1 = p2;
-		crossel1 = sel2;
-	}
-	sel1 = RND(POPUL);
-	sel2 = RND(POPUL);
-	while (sel1 == sel2) {
-		sel2 = RND(POPUL);
-	}
-	Individual p3 = pop[sel1], p4 = pop[sel2];
-	if (p3.dominates(&p4) == D_TRUE) {
-		parent2 = p3;
-		crossel2 = sel1;
-	} else if (p3.dominates(&p4) == D_FALSE) {
-		parent2 = p4;
-		crossel2 = sel2;
-	} else if (RND(100) < 50) {
-		parent2 = p3;
-		crossel2 = sel1;
-	} else {
-		parent2 = p4;
-		crossel2 = sel2;
 	}
 }
 
@@ -396,31 +384,13 @@ void Population::run(int seed) {
 	int smallest = 20000, smallestidx = -1;
 	int prevtime = 10;
 	double duration = getduration();
-	int fit;
 	size_t m;
-
-	int fit2, fit4, fith1, fith0;
-	int fit6 = 20000;
-	if (conf->verbose_level == 2) {
-		cout << "id\tfitH1\tfitH2\tfitS1\tfitS2\tCR+\tCR-\tHC+\tHC-\tADD+\tADD-\tPAR+\tPAR-\tMUT+\tMUT-" << endl;
-		for (m = 0; m < POPUL; m++) {
-			fit = pop[m].fitnessh + pop[m].fitnessh1;
-			fith0 = pop[m].fitnessh;
-			fith1 = pop[m].fitnessh1;
-			fit2 = pop[m].fitnessf;
-			fit4 = pop[m].fitnessf2;
-			if (fit < smallest) {
-				smallest = fit;
-				smallestidx = m;
-				fit6 = fit + fit2 + fit4;
-			} else if (fit <= smallest && fit + fit2 + fit4 < fit6) {
-				smallest = fit;
-				smallestidx = m;
-				fit6 = fit + fit2 + fit4;
-			}
-		}
-		cout << smallestidx << "\t" << pop[smallestidx].fitnessh << "\t" << pop[smallestidx].fitnessh1 << "\t" << pop[smallestidx].fitnessf << "\t"
-				<< pop[smallestidx].fitnessf2 << endl;;
+	if (conf->verbose_level == 2 || conf->verbose_level == 4) {
+		cout << "id\tfitTotal\tfitH1\tfitH2\tfitS1\tfitS2\tCR+\tCR-\tHC+\tHC-\tADD+\tADD-\tPAR+\tPAR-\tMUT+\tMUT-"
+				<< endl;
+		smallestidx = get_smallest_hfit();
+		print_fit(smallestidx);
+		cout << endl;
 	}
 	while ((int) duration <= conf->dur) {
 		it++;
@@ -428,36 +398,26 @@ void Population::run(int seed) {
 		if ((int) duration % 10 == 0 && prevtime == (int) duration) {
 			prevtime = prevtime + 10;
 		}
-		if (it % 20 == 0) {
-			smallest = 2000;
-			smallestidx = -1;
-			for (m = 0; m < paretof.size(); m++) {
-				fit = pop[paretof[m]].fitnessh + pop[paretof[m]].fitnessh1;
-				fith0 = pop[paretof[m]].fitnessh;
-				fith1 = pop[paretof[m]].fitnessh1;
-				fit2 = pop[paretof[m]].fitnessf;
-				fit4 = pop[paretof[m]].fitnessf2;
-				if (conf->verbose_level == 1) {
-					cout << "id: " << setw(2) << m << "\tfith1:" << setw(4) << fith0 << "\tfith2:" << setw(4) << fith1 <<
-						"\tfits1:" << setw(4) << fit2 << "\tfits2:" << setw(4) << fit4 << endl;
-				}
-				if (fit < smallest) {
-					smallest = fit;
-					smallestidx = m;
-					fit6 = fit + fit2 + fit4;
-				} else if (fit <= smallest && fit + fit2 + fit4 < fit6) {
-					smallest = fit;
-					smallestidx = m;
-					fit6 = fit + fit2 + fit4;
-				}
+		if (updatePareto && (conf->verbose_level == 3 || conf->verbose_level == 4)) {
+			smallestidx = get_smallest_hfit();
+			smallest = pop[paretof[smallestidx]]->fitnessh + pop[paretof[smallestidx]]->fitnessh1;
+
+			if (conf->verbose_level == 3) {
+				cout << "id" << smallestidx << "\tmin:" << smallest << endl;
+			} else if (conf->verbose_level == 4) {
+				print_fit(paretof[smallestidx]);
+				print_stat();
 			}
+			updatePareto = false;
+		}
+		if (it % 20 == 0 && (conf->verbose_level == 1 || conf->verbose_level == 2)) {
+			smallestidx = get_smallest_hfit();
+
 			if (conf->verbose_level == 1) {
 				cout << "# of iterations " << it << " duration " << duration << endl;
 				cout << "# smallest " << smallestidx << endl;
-			}
-			else if (conf->verbose_level == 2) {
-				cout << smallestidx << "\t" << pop[paretof[smallestidx]].fitnessh << "\t" << pop[paretof[smallestidx]].fitnessh1 << "\t" << pop[paretof[smallestidx]].fitnessf << "\t"
-								<< pop[paretof[smallestidx]].fitnessf2 << "\t";
+			} else if (conf->verbose_level == 2) {
+				print_fit(paretof[smallestidx]);
 				print_stat();
 			}
 		}
@@ -465,53 +425,39 @@ void Population::run(int seed) {
 		hillclimbmix2();
 		mutation();
 	}
-	smallest = 2000;
-	smallestidx = -1;
-	for (m = 0; m < paretof.size(); m++) {
-		fit = pop[paretof[m]].fitnessh + pop[paretof[m]].fitnessh1;
-		fit2 = pop[paretof[m]].fitnessf;
-		fit4 = pop[paretof[m]].fitnessf2;
-		cout << "id: " << setw(2) << m << "\tfith1:" << setw(4) << pop[paretof[m]].fitnessh << "\tfith2:" << setw(4) << pop[paretof[m]].fitnessh1 <<
-								"\tfits1:" << setw(4) << pop[paretof[m]].fitnessf << "\tfits2:" << setw(4) << pop[paretof[m]].fitnessf2 << " All:" << setw(4) << fit + fit2 + fit4 << endl;
-		if (fit < smallest) {
-			smallest = fit;
-			smallestidx = m;
-			fit6 = fit + fit2 + fit4;
-		} else if (fit <= smallest && fit + fit2 + fit4 < fit6) {
-			smallest = fit;
-			smallestidx = m;
-			fit6 = fit + fit2 + fit4;
-		}
-	}
+
+	smallestidx = get_smallest_hfit();
+	smallest = pop[paretof[smallestidx]]->fitnessh + pop[paretof[smallestidx]]->fitnessh1;
+
 	printf("# of iterations %d duration %d\n", it, (int) duration);
 	printf("# smallest  %d \n", smallestidx);
 	printf("THE SOULUTION IS  \n");
-	//pop[paretof[smallestidx]].printlect();
-	//pop[paretof[smallestidx]].printdekanlik();
-	//pop[paretof[smallestidx]].printtable();
-	fit = pop[paretof[smallestidx]].fitnessHCAL(1);
-	fit = pop[paretof[smallestidx]].fitnessFCAL(1);
-	fit = pop[paretof[smallestidx]].fitnessF1CAL(1);
-	fit = pop[paretof[smallestidx]].fitnessF2CAL(1);
-	fit = pop[paretof[smallestidx]].fitnessF3CAL(1);
+	//pop[paretof[smallestidx]]->printlect();
+	//pop[paretof[smallestidx]]->printdekanlik();
+	//pop[paretof[smallestidx]]->printtable();
+	pop[paretof[smallestidx]]->fitnessHCAL(1);
+	pop[paretof[smallestidx]]->fitnessFCAL(1);
+	pop[paretof[smallestidx]]->fitnessF1CAL(1);
+	pop[paretof[smallestidx]]->fitnessF2CAL(1);
+	pop[paretof[smallestidx]]->fitnessF3CAL(1);
 	for (m = 0; m < paretof.size(); m++) {
 		printf("THE SOULUTION IS %d \n", m);
-		//pop[paretof[m]].printlect();
-		//pop[paretof[m]].printdekanlik();
-		//pop[paretof[m]].printtable();
-		fit = pop[paretof[m]].fitnessHCAL(1);
-		fit = pop[paretof[m]].fitnessFCAL(1);
-		fit = pop[paretof[m]].fitnessF1CAL(1);
-		fit = pop[paretof[m]].fitnessF2CAL(1);
-		fit = pop[paretof[m]].fitnessF3CAL(1);
+		//pop[paretof[m]]->printlect();
+		//pop[paretof[m]]->printdekanlik();
+		//pop[paretof[m]]->printtable();
+		pop[paretof[m]]->fitnessHCAL(1);
+		pop[paretof[m]]->fitnessFCAL(1);
+		pop[paretof[m]]->fitnessF1CAL(1);
+		pop[paretof[m]]->fitnessF2CAL(1);
+		pop[paretof[m]]->fitnessF3CAL(1);
 	}
 	fstream fresult;
 	fresult.open("result.txt", fstream::app | fstream::out);
-	fresult << "hard1:" << pop[paretof[smallestidx]].fitnessh << "\thard2:" << pop[paretof[smallestidx]].fitnessh1
-			<< "\tsoft1:" << pop[paretof[smallestidx]].fitnessf << "\tsoft2:" << pop[paretof[smallestidx]].fitnessf2
+	fresult << "hard1:" << pop[paretof[smallestidx]]->fitnessh << "\thard2:" << pop[paretof[smallestidx]]->fitnessh1
+			<< "\tsoft1:" << pop[paretof[smallestidx]]->fitnessf << "\tsoft2:" << pop[paretof[smallestidx]]->fitnessf2
 			<< "\tduration: " << duration << "\thillrnd: " << conf->hillrnd << "\thillboth:" << conf->hillboth
-			<< "\tmutrate:" << conf->mutg1rate << "\tcrrate:" << conf->crrate << "\tinsertRate:" << conf->insert_popul_rate
-			<< "\tpspace:" << conf->crowding_dist  << "\tseed:" << seed << endl;
+			<< "\tmutrate:" << conf->mutg1rate << "\tcrrate:" << conf->crrate << "\tinsertRate:"
+			<< conf->insert_popul_rate << "\tpspace:" << conf->crowding_dist << "\tseed:" << seed << endl;
 	print_stat();
 	fresult.flush();
 	fresult.close();
@@ -524,7 +470,40 @@ void Population::print_stat() {
 	cout << hc_suc << "\t" << hc_fail << "\t";
 	cout << add_suc << "\t" << add_fail << "\t";
 	cout << par_suc << "\t" << par_fail << "\t";
-	cout << mut_suc << "\t" << mut_fail	 << endl;
+	cout << mut_suc << "\t" << mut_fail << endl;
+}
+
+void Population::print_fit(int smallestidx) {
+	int fit = pop[smallestidx]->fitnessh;
+	int fit2 = pop[smallestidx]->fitnessh1;
+	int fitH = fit + fit2;
+	int fit3 = pop[smallestidx]->fitnessf;
+	int fit4 = pop[smallestidx]->fitnessf2;
+	cout << smallestidx << "\t" << fitH << "\t" << fit << "\t" << fit2 << "\t" << fit3 << "\t" << fit4 << "\t";
+}
+
+int Population::get_smallest_hfit() {
+	int fitTotal = 2000, smallest = 2000;
+	int smallestidx = -1;
+	for (size_t m = 0; m < paretof.size(); m++) {
+		int fit = pop[paretof[m]]->fitnessh + pop[paretof[m]]->fitnessh1;
+		if (conf->verbose_level == 3 || conf->verbose_level == 1) {
+			cout << "id: " << setw(2) << m << "\tfith1:" << setw(4) << pop[paretof[m]]->fitnessh << "\tfith2:"
+					<< setw(4) << pop[paretof[m]]->fitnessh1 << "\tfits1:" << setw(4) << pop[paretof[m]]->fitnessf
+					<< "\tfits2:" << setw(4) << pop[paretof[m]]->fitnessf2 << endl;
+		}
+		if (fit < smallest) {
+			smallest = fit;
+			smallestidx = m;
+			fitTotal = fit + pop[paretof[m]]->fitnessf + pop[paretof[m]]->fitnessf2;
+		} else if (fit <= smallest && fit + pop[paretof[m]]->fitnessf + pop[paretof[m]]->fitnessf2 < fitTotal) {
+			smallest = fit;
+			smallestidx = m;
+			fitTotal = fit + pop[paretof[m]]->fitnessf + pop[paretof[m]]->fitnessf2;
+			;
+		}
+	}
+	return smallestidx;
 }
 
 } /* namespace std */

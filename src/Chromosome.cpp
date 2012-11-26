@@ -14,6 +14,22 @@ Chromosome::Chromosome(int chrom_length, int no_colors) {
 	this->no_colors = no_colors;
 }
 
+Chromosome::Chromosome(Chromosome* source) {
+	int i;
+	this->chrom_length = source->chrom_length;
+	this->no_colors = source->no_colors;
+
+	for (i = 0; i < NCOL; ++i) {
+		this->slot_map[i] = source->slot_map[i];
+	}
+	for (i = 0; i < CHROML; ++i) {
+		this->day[i] = source->day[i];
+		this->slot[i] = source->slot[i];
+		this->chrom[i] = source->chrom[i];
+	}
+}
+
+
 Chromosome::~Chromosome() {
 	// TODO Auto-generated destructor stub
 }
@@ -21,8 +37,8 @@ Chromosome::~Chromosome() {
 void Chromosome::add(int section, int val) {
 	chrom[section] = val;
 	slot_map[val].push_back(section);
-	day[section] = -1;
-	slot[section] = -1;
+	day[section] = val / PERIODS;
+	slot[section] = val % PERIODS;
 }
 
 void Chromosome::update(int section, int val) {

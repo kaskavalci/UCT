@@ -25,23 +25,27 @@ private:
 	double getduration();
 	void crossover();
 	void mutation();
-	bool add_to_population(Individual&);
+	bool add_to_population(Individual*);
 	bool add_to_pareto(int);
-	void selection(Individual&, Individual&);
-	void tournament(Individual&);
+	void selection(Individual*, Individual*);
+	void tournament(Individual*);
 	int calc_nitch(int);
 	int calc_crowd(int);
 	void hillclimbmix2();
 	bool foundinpar(int);
 	void selection_old(Individual&, Individual&);
 	void print_stat();
+	void print_fit(int);
+	int get_smallest_hfit();
+
+	bool updatePareto;
 
 	int fit_table[POPUL][4];
 	time_t start;
 	bool inpf3[POPUL];
 	vector<int> paretof;
 	Common *conf;
-	vector<Individual> pop;
+	vector<Individual*> pop;
 	int crossel1;
 	int crossel2;
 

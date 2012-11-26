@@ -1,13 +1,26 @@
-dur	150
+#Usage of this file.
+#
+#Lines starts with dash, indicates comment.
+
+dur	2000
 
 hillsize	1.00
+
+#hillrnd, used in hc1 only.
 hillrnd	0.4
-hillboth	0.4
+
+hillboth	0.6
 mutg1rate	0.004
 mutg3rate	0.004
 mutg5rate	0.004
 crrate	0.9
-randomly_insert_to_population	0.005
+randomly_insert_to_population	0.001
 crowding_dist	3
 hc_max_ind	10
-verbose_level	2
+
+#verbose level. Possible values:
+#	1. At every 20 iterations, print pareto front with fitness values
+#	2. At every 20 iterations, print individual with smallest total hard fitness.
+#	3. At every change in pareto front, print pareto front with fitness values.
+#	4. At every change in pareto front, print individual with smallest total hard fitness.
+verbose_level	4
