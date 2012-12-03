@@ -18,7 +18,8 @@ namespace std {
 
 class Common {
 public:
-	Common();
+	static Common *getConf();
+	virtual ~Common();
 	int findcourse(int idx);
 	int findlabcourse(int idx);
 	int findlecture(int idx);
@@ -51,6 +52,11 @@ public:
 	int crowding_dist;
 	int hc_max_ind;
 	int verbose_level;
+	vector<vector<int> > hardgroup, softgroup;
+private:
+	static bool instanceFlag;
+	static Common *conf;
+	Common();
 
 };
 

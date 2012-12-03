@@ -2,7 +2,7 @@
 #
 #Lines starts with dash, indicates comment.
 
-dur	2000
+dur	300
 
 hillsize	1.00
 
@@ -24,3 +24,11 @@ hc_max_ind	10
 #	3. At every change in pareto front, print pareto front with fitness values.
 #	4. At every change in pareto front, print individual with smallest total hard fitness.
 verbose_level	4
+
+#fitness groups. We can change the dimension of the system from here.
+#at the end of each group, -1 should be added to indicate line end.
+#fitness groups are based on Constants.h enumerator. 
+hard_fitness_group	0	1	-1
+hard_fitness_group	2	-1
+soft_fitness_group	0	1	2	3	4	5	6	7	-1
+soft_fitness_group	8	9	10	11	12	-1

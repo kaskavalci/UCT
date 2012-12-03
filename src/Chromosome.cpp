@@ -6,18 +6,21 @@
  */
 
 #include "Chromosome.h"
+#include <iostream>
 
 namespace std {
 
 Chromosome::Chromosome(int chrom_length, int no_colors) {
 	this->chrom_length = chrom_length;
 	this->no_colors = no_colors;
+	fit = new Fitness(this);
 }
 
 Chromosome::Chromosome(Chromosome* source) {
 	int i;
 	this->chrom_length = source->chrom_length;
 	this->no_colors = source->no_colors;
+	fit = new Fitness(this);
 
 	for (i = 0; i < NCOL; ++i) {
 		this->slot_map[i] = source->slot_map[i];
@@ -29,9 +32,8 @@ Chromosome::Chromosome(Chromosome* source) {
 	}
 }
 
-
 Chromosome::~Chromosome() {
-	// TODO Auto-generated destructor stub
+	delete fit;
 }
 
 void Chromosome::add(int section, int val) {
@@ -70,8 +72,29 @@ list<int> *Chromosome::get_longest_slot() {
 	return thelist;
 }
 
+void Chromosome::updatefitness(int val) {
+	fit->updatefitness(val);
+}
+
+void Chromosome::calc_hardfit(const std::list<int>& list, s_hard_fitness_t& fitness, int print) {
+	fit->calc_hardfit(list, fitness, print);
+}
+
+void Chromosome::calc_softfit(const list<int>& list, s_soft_fitness_t& fitness, int print) {
+	fit->calc_softfit(list, fitness, print);
+
+}
+
 list<int> *Chromosome::get_section_list(int slot) {
 	return &slot_map[slot];
+}
+
+const s_hard_fitness_t& Chromosome::get_hardfit() {
+	return fit->getHardFit();
+}
+
+const s_soft_fitness_t& Chromosome::get_softfit() {
+	return fit->getSoftFit();
 }
 
 } /* namespace std */

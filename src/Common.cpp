@@ -11,9 +11,37 @@
 
 namespace std {
 
-Common::Common() {
-	// TODO Auto-generated constructor stub
+bool Common::instanceFlag = false;
+Common * Common::conf = NULL;
 
+Common* Common::getConf() {
+	if (!instanceFlag) {
+		conf = new Common();
+		instanceFlag = true;
+		return conf;
+	}
+	else {
+		return conf;
+	}
+}
+
+Common::Common() {
+	mutg1rate = 0.008;
+	mutg3rate = 0.008;
+	mutg5rate = 0.008;
+	dur = 2000;
+	hillsize = 1.00;
+	hillrnd = 0.5;
+	hillboth = 0.6;
+	crrate = 0.9;
+	insert_popul_rate = 0.001;
+	crowding_dist = 3;
+	hc_max_ind = 10;
+	verbose_level = 4;
+}
+
+Common::~Common() {
+	instanceFlag = false;
 }
 
 int Common::findcourse(int idx) {

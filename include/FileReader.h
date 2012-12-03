@@ -14,7 +14,7 @@ namespace std {
 
 class FileReader {
 public:
-	FileReader(Common *c);
+	FileReader();
 	void readreq();
 	void readcourses();
 	void readinputparam();

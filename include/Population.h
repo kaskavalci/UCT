@@ -16,7 +16,7 @@ namespace std {
 
 class Population {
 public:
-	Population(Common *conf);
+	Population();
 	virtual ~Population();
 
 	void run(int seed);
@@ -29,14 +29,14 @@ private:
 	bool add_to_pareto(int);
 	void selection(Individual*, Individual*);
 	void tournament(Individual*);
-	int calc_nitch(int);
-	int calc_crowd(int);
+	int calc_crowd(int, const vector<int>&);
 	void hillclimbmix2();
 	bool foundinpar(int);
-	void selection_old(Individual&, Individual&);
 	void print_stat();
-	void print_fit(int);
 	int get_smallest_hfit();
+	void print_fitness(ostream &, Individual*);
+	void print_header(ostream &);
+	bool crowd_condition(vector<vector<int> >, Individual*,Individual*);
 
 	bool updatePareto;
 
@@ -44,6 +44,7 @@ private:
 	time_t start;
 	bool inpf3[POPUL];
 	vector<int> paretof;
+	vector<int> population;
 	Common *conf;
 	vector<Individual*> pop;
 	int crossel1;

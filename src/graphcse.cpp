@@ -24,8 +24,7 @@ void print2(int*p) {
 
 int main(int argc, char*argv[]) {
 	FILE*tstf = fopen("tst.txt", "w");
-	Common conf;
-	FileReader reader(&conf);
+	FileReader reader;
 	reader.readinputparam();
 	reader.readcourses();
 	reader.readreq();
@@ -41,7 +40,7 @@ int main(int argc, char*argv[]) {
 		seed = time(0);
 	}
 	srand(seed);
-	Population popn(&conf);
+	Population popn;
 	popn.run(seed);
 
 	/*printf("hello\n");

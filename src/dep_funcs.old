@@ -19,6 +19,483 @@
 	void readtime();
 	
 	int findmin();
+	
+	typedef struct {
+		int id[HARD_FIT_N];
+		int fitness[HARD_FIT_N];
+		int total_fit;
+	} s_worst_chrom_t;
+	
+	
+int Fitness::fitnessHCAL(int print) {
+	int cnt = 0, cnt1 = 0;
+	size_t i, j;
+	vector<Errnode> errv;
+	Errnode tmperr;
+	for (i = 0; i < HARD_FIT_N; ++i) {
+		hard_fit.fitness[i] = 0;
+	}
+	hard_fit.total_fit = 0;
+	for (i = 0; i < CHROML; i++) {
+		for (j = i + 1; j < CHROML; j++) {
+			if (fit_hconfmat(i, j)) {
+				hard_fit.fitness[fit_hConfmat]++;
+				if (print == 1) {
+					tmperr.desc = " 1 Confmat ";
+					tmperr.s1 = conf->courmat[i].cname;
+					tmperr.s2 = conf->courmat[j].cname;
+					errv.push_back(tmperr);
+				}
+				if (print == 2) {
+					conflv.push_back(i);
+					conflv.push_back(j);
+				}
+			}
+			if (fit_hsameday(i, j)) {
+				hard_fit.fitness[fit_hSameDay]++;
+				if (print == 1) {
+					tmperr.desc = " 2 Same Day ";
+					tmperr.s1 = conf->courmat[i].cname;
+					tmperr.s2 = conf->courmat[j].cname;
+					errv.push_back(tmperr);
+				}
+				if (print == 2) {
+					conflv.push_back(i);
+					conflv.push_back(j);
+				}
+			}
+			if (fit_hmidday(i, j)) {
+				hard_fit.fitness[fit_hMidHour]++;
+				if (print == 1) {
+					tmperr.desc = " 3 Hours 11-13   ";
+					tmperr.s1 = conf->courmat[i].cname;
+					tmperr.s2 = conf->courmat[j].cname;
+					errv.push_back(tmperr);
+				}
+				if (print == 2) {
+					conflv.push_back(i);
+					conflv.push_back(j);
+				}
+			}
+		}
+	}
+	if (print == 1) {
+		for (i = 0; i < errv.size(); i++) {
+			cout << "Hard " << errv[i].desc << errv[i].s1 << " " << errv[i].s2 << " " << errv[i].n1 << endl;
+		}
+	}
+	return cnt + cnt1;
+}
+
+int Fitness::fitnessF1CAL(int print) {
+	int cnt = 0;
+	size_t i;
+	vector<Errnode> errv;
+	Errnode tmperr;
+	vector<int> cmax(conf->labcourses.size(), -1);
+	vector<int> cmin(conf->labcourses.size(), 100);
+	vector<int> lab1(conf->labcourses.size(), -1);
+	vector<int> lab2(conf->labcourses.size(), -1);
+	int decv = -1;
+
+	for (i = 0; i < CHROML; i++) {
+		if (conf->labid[i] != -1) {
+			decv = decode(i);
+			if (decv > cmax[conf->labid[i]] && conf->courmat[i].cname.size() > 8 && conf->lab[i] == 0)
+				cmax[conf->labid[i]] = decv;
+			if (decv < cmin[conf->labid[i]] && conf->courmat[i].cname.size() > 8 && conf->lab[i] == 0)
+				cmin[conf->labid[i]] = decv;
+			if (lab1[conf->labid[i]] == -1 && conf->courmat[i].cname.size() > 8 && conf->lab[i] == 1)
+				lab1[conf->labid[i]] = decv;
+			if (lab1[conf->labid[i]] != -1 && conf->courmat[i].cname.size() > 8 && conf->lab[i] == 1)
+				lab2[conf->labid[i]] = decv;
+		}
+	}
+	for (i = 0; i < conf->labcourses.size(); i++) {
+		if ((lab1[i] < cmax[i] && lab1[i] > cmin[i]) || (lab2[i] < cmax[i] && lab2[i] > cmin[i])) {
+			cnt = cnt + 1;
+			if (print == 1) {
+				tmperr.desc = " 11 L T L conflict       ";
+				tmperr.s1 = conf->labcourses[i];
+				tmperr.s2 = " ";
+				tmperr.n1 = i;
+				errv.push_back(tmperr);
+			}
+		}
+		if ((lab1[i] < cmin[i]) && (lab2[i] > cmin[i])) {
+			cnt = cnt + 1;
+			if (print == 1) {
+				tmperr.desc = " 11 L T L conflict       ";
+				tmperr.s1 = conf->labcourses[i];
+				tmperr.s2 = " ";
+				tmperr.n1 = i;
+				errv.push_back(tmperr);
+			}
+		}
+		if ((lab1[i] > cmax[i]) && (lab2[i] < cmax[i])) {
+			cnt = cnt + 1;
+			if (print == 1) {
+				tmperr.desc = " 11 L T L conflict       ";
+				tmperr.s1 = conf->labcourses[i];
+				tmperr.s2 = " ";
+				tmperr.n1 = i;
+				errv.push_back(tmperr);
+			}
+		}
+	}
+	if (print == 1) {
+		for (i = 0; i < errv.size(); i++) {
+			cout << "Hard " << errv[i].desc << errv[i].s1 << " " << errv[i].s2 << " " << errv[i].n1 << endl;
+		}
+	}
+	fitnessf += cnt;
+	return fitnessf;
+}
+int Fitness::fitnessF2CAL(int print) {
+	int cnt = 0;
+	size_t i, j;
+	vector<Errnode> errv;
+	Errnode tmperr;
+	for (i = 0; i < CHROML; i++) {
+		for (j = 0; j < CHROML; j++) {
+			if (fit_sconssem1(i, j)) {
+				cnt = cnt + 1;
+				if (print == 1) {
+					tmperr.desc = " 4 Prev Sem Next Sem    ";
+					tmperr.s1 = conf->courmat[i].cname;
+					tmperr.s2 = conf->courmat[j].cname;
+					errv.push_back(tmperr);
+				}
+				if (print == 2) {
+					conflv.push_back(i);
+					conflv.push_back(j);
+				}
+			}
+			if (fit_sconssem2(i, j)) {
+				cnt = cnt + 1;
+				if (print == 1) {
+					tmperr.desc = " 4 Prev Sem Next Sem    ";
+					tmperr.s1 = conf->courmat[i].cname;
+					tmperr.s2 = conf->courmat[j].cname;
+					errv.push_back(tmperr);
+				}
+				if (print == 2) {
+					conflv.push_back(i);
+					conflv.push_back(j);
+				}
+			}
+			if (fit_sconssem3(i, j)) {
+				cnt = cnt + 1;
+				if (print == 1) {
+					tmperr.desc = " 4 Prev Sem Next Sem    ";
+					tmperr.s1 = conf->courmat[i].cname;
+					tmperr.s2 = conf->courmat[j].cname;
+					errv.push_back(tmperr);
+				}
+				if (print == 2) {
+					conflv.push_back(i);
+					conflv.push_back(j);
+				}
+			}
+		}
+	}
+	init_lectures();
+	for (i = 0; i < conf->lectures.size(); i++) {
+		for (j = 0; j < conf->lectures.size(); j++) {
+			conf->lectures[i].labs[0] = -1;
+			conf->lectures[i].labs[1] = -1;
+			conf->lectures[i].labs[2] = -1;
+			if (conf->lectures[i].semid == conf->lectures[j].semid + 1
+					|| conf->lectures[j].semid == conf->lectures[i].semid + 1) {
+				init_labs(i, j);
+				if (fit_sconssemlab1(i, j)) {
+					cnt = cnt + 1;
+					if (print == 1) {
+						tmperr.desc = " 4 Prev Sem Next Sem   LABS ";
+						tmperr.s1 = conf->lectures[i].lectname;
+						tmperr.s2 = conf->lectures[j].lectname;
+						errv.push_back(tmperr);
+					}
+				}
+				if (fit_sconssemlab2(i, j)) {
+					cnt = cnt + 1;
+					if (print == 1) {
+						tmperr.desc = " 4 Prev Sem Next Sem   LABS ";
+						tmperr.s1 = conf->lectures[i].lectname;
+						tmperr.s2 = conf->lectures[j].lectname;
+						errv.push_back(tmperr);
+					}
+				}
+				if (fit_sconssemlab3(i, j)) {
+					cnt = cnt + 1;
+					if (print == 1) {
+						tmperr.desc = " 4 Prev Sem Next Sem   LABS ";
+						tmperr.s1 = conf->lectures[i].lectname;
+						tmperr.s2 = conf->lectures[j].lectname;
+						errv.push_back(tmperr);
+					}
+				}
+			}
+		}
+	}
+	if (print == 1) {
+		for (i = 0; i < errv.size(); i++) {
+			cout << "Hard " << errv[i].desc << errv[i].s1 << " " << errv[i].s2 << " " << errv[i].n1 << endl;
+		}
+	}
+	fitnessf2 = cnt;
+	return 0;
+}
+int Fitness::fitnessFCAL(int print) {
+	int j, cnt;
+	cnt = 0;
+	vector<Errnode> errv;
+	Errnode tmperr;
+	size_t i, h;
+	for (i = 0; i < CHROML; i++) {
+		//Department meeting conflict
+		if (fit_sdepmeet(i)) {
+			cnt = cnt + 1;
+			if (print == 1) {
+				tmperr.desc = " 15 Departmental Meeting     ";
+				tmperr.s1 = conf->courmat[i].cname;
+				tmperr.s2 = conf->courmat[i].cname;
+				errv.push_back(tmperr);
+			}
+			if (print == 2) {
+				conflv.push_back(i);
+				conflv.push_back(j);
+			}
+		}
+		//Hardware labs conflict
+		for (j = i + 1; j < CHROML; j++) {
+			if (fit_slabconf(i, j)) {
+				cnt = cnt + 1;
+				if (print == 1) {
+					tmperr.desc = " 16 Hardware Labs      ";
+					tmperr.s1 = conf->courmat[i].cname;
+					tmperr.s2 = conf->courmat[j].cname;
+					errv.push_back(tmperr);
+				}
+				if (print == 2) {
+					conflv.push_back(i);
+					conflv.push_back(j);
+				}
+			}
+		}
+	}
+	for (h = 0; h < conf->lecturers.size(); h++) {
+		int m, n;
+		bool lectmatrix[5][10];
+		int morlect[5];
+		for (m = 0; m < 5; m++) {
+			morlect[m] = 0;
+			for (n = 0; n < 10; n++)
+				lectmatrix[m][n] = false;
+		}
+		for (m = 0; m < CHROML; m++) {
+			if (conf->lecturers[h] == conf->courmat[m].lname) {
+				buildlect_matrix(lectmatrix, m);
+			}
+		}
+		int fday, fday2 = 0;
+		int strcnt = 0, stpcnt = 0, foundr = 0;
+		int dayov;
+		for (m = 0; m < 5; m++) {
+			fday = 0;
+			strcnt = 0;
+			stpcnt = 0;
+			foundr = 0;
+			dayov = 0;
+			if (lectmatrix[m][0])
+				morlect[m] = 1;
+			for (n = 0; n < 10; n++) {
+				if (lectmatrix[m][n]) {
+					fday = 1;
+					dayov++;
+				}
+				if (n + 3 < 10 && lectmatrix[m][n] && lectmatrix[m][n + 1] && lectmatrix[m][n + 2]
+						&& lectmatrix[m][n + 3]) {
+					cnt = cnt + 1;
+					if (print == 1) {
+						tmperr.desc = " 7 Lecturer 4 cons Work Hour     ";
+						tmperr.s1 = conf->lecturers[h];
+						tmperr.s2 = " ";
+						errv.push_back(tmperr);
+					}
+				}
+				if (n + 1 < 10 && lectmatrix[m][n] && !lectmatrix[m][n + 1] && foundr == 0) {
+					strcnt = n + 1;
+					foundr = 1;
+				}
+				if (n + 1 < 10 && !lectmatrix[m][n] && lectmatrix[m][n + 1]) {
+					stpcnt = n + 1;
+				}
+			}
+			if (stpcnt - strcnt > 3 && foundr != 0) {
+				cnt = cnt + 1;
+				if (print == 1) {
+					tmperr.desc = " 8 Lecturer 4 cons Empty Hour     ";
+					tmperr.s1 = conf->lecturers[h];
+					tmperr.s2 = " ";
+					errv.push_back(tmperr);
+				}
+			}
+			if (dayov > 4) {
+				cnt = cnt + 1;
+				if (print == 1) {
+					tmperr.desc = " 9 Lecturer More than 4 Hours per day       ";
+					tmperr.s1 = conf->lecturers[h];
+					tmperr.s2 = " ";
+					errv.push_back(tmperr);
+				}
+			}
+			if (fday == 0)
+				fday2 = 1;
+		}
+		if (fday2 == 0) {
+			cnt = cnt + 1;
+			if (print == 1) {
+				tmperr.desc = " 10 Lecturer No free Day      ";
+				tmperr.s1 = conf->lecturers[h];
+				tmperr.s2 = " ";
+				errv.push_back(tmperr);
+			}
+		}
+		int p, nummor = 0;
+		for (p = 0; p < 5; p++) {
+			nummor = nummor + morlect[p];
+		}
+		if (nummor > 1) {
+			cnt = cnt + 1;
+			if (print == 1) {
+				tmperr.desc = " 12 Lecturer More than 2 morning courses      ";
+				tmperr.s1 = conf->lecturers[h];
+				tmperr.s2 = " ";
+				errv.push_back(tmperr);
+			}
+		}
+	}
+	if (print == 1) {
+		for (i = 0; i < errv.size(); i++) {
+			cout << "Hard " << errv[i].desc << errv[i].s1 << " " << errv[i].s2 << " " << errv[i].n1 << endl;
+		}
+	}
+	fitnessf = cnt;
+	return 0;
+}
+
+int Fitness::fitnessF3CAL(int print) {
+	int cnt = 0;
+	size_t i;
+	vector<Errnode> errv;
+	Errnode tmperr;
+	bool lunch[8][5][3] = { };
+
+	for (i = 0; i < CHROML; i++) {
+		init_lunchinfo(lunch, i);
+	}
+	for (int semester = 0; semester < 8; semester++) {
+		for (int day = 0; day < 5; day++) {
+			if (lunch[semester][day][0] && lunch[semester][day][1] && lunch[semester][day][2]
+					&& fit_signoredlunchconflict(semester, day)) {
+				cnt = cnt + 1;
+				if (print == 1) {
+					tmperr.desc = " 14 No Lunch Hour  conflict       ";
+					tmperr.s1 = " ";
+					tmperr.s2 = " ";
+					tmperr.n1 = semester * 8 + day;
+					errv.push_back(tmperr);
+				}
+			}
+		}
+	}
+	for (i = 0; i < CHROML; i++) {
+		if (conf->courmat[i].hours == 1 && chromosome->slot[i] == 3) {
+			cnt = cnt + 1;
+			if (print == 1) {
+				tmperr.desc = " 5 Evening Lecture    ";
+				tmperr.s1 = conf->courmat[i].cname;
+				tmperr.s2 = " ";
+				errv.push_back(tmperr);
+			}
+			if (print == 2) {
+				conflv.push_back(i);
+			}
+		}
+		if (conf->courmat[i].cname.size() > 8 && conf->lab[i] == 1 && chromosome->slot[i] == 0
+				&& conf->courmat[i].hours == 2) {
+			cnt = cnt + 1;
+			if (print == 1) {
+				tmperr.desc = " 6 Mourning Lab     ";
+				tmperr.s1 = conf->courmat[i].cname;
+				tmperr.s2 = " ";
+				errv.push_back(tmperr);
+			}
+			if (print == 2) {
+				conflv.push_back(i);
+			}
+		}
+	}
+	if (print == 1) {
+		for (i = 0; i < errv.size(); i++) {
+			cout << "Hard " << errv[i].desc << errv[i].s1 << " " << errv[i].s2 << " " << errv[i].n1 << endl;
+		}
+	}
+	fitnessf2 += cnt;
+	return fitnessf2;
+}
+
+void Fitness::calc_hardfit(const list<int>& list, s_hard_fitness_t& fit, int print) {
+	h_confmat(list, fit, print);
+	h_sameday(list, fit, print);
+	h_midday(list, fit, print);
+	for (int i = 0; i < HARD_FIT_N; ++i) {
+		fit.total_fit += fit.fitness[i];
+	}
+}
+	
+	
+	
+/* used to find worst individual in given slot
+ * takes a list of slots (which contain course ID that is assigned to slot, for more info refer to Chromosome.cpp::slot_map)
+ * and find the worst gene in it. Also compute fitness of the slot.
+ */
+void Individual::get_hardfit(list<int> &list, s_worst_chrom_t &worst_chrom) {
+	int temp_fit[HARD_FIT_N] = { };
+	for (int i = 0; i < HARD_FIT_N; ++i) {
+		worst_chrom.fitness[i] = 0;
+		worst_chrom.id[i] = -1;
+	}
+	std::list<int>::iterator it1e = list.end();
+	for (std::list<int>::iterator it1 = list.begin(); it1 != it1e; ++it1) {
+		//don't calculate fitness for courses that has constraint. We cannot change them, so focus on
+		//the ones that we can change.
+		if (conf->courmat[*it1].has_constraint == 1) {
+			continue;
+		}
+		for (std::list<int>::iterator it2 = list.begin(); it2 != it1e; ++it2) {
+			if (fit_hconfmat(*it1, *it2)) {
+				temp_fit[0]++;
+			}
+			if (fit_hsameday(*it1, *it2)) {
+				temp_fit[1]++;
+			}
+			if (fit_hmidday(*it1, *it2)) {
+				temp_fit[2]++;
+			}
+		}
+		for (int i = 0; i < HARD_FIT_N; ++i) {
+			if (temp_fit[i] > worst_chrom.fitness[i]) {
+				worst_chrom.fitness[i] = temp_fit[i];
+				worst_chrom.id[i] = *it1;
+			}
+		}
+		for (int i = 0; i < HARD_FIT_N; ++i) {
+			temp_fit[i] = 0;
+		}
+	}
+}
 
 /*
  * depreciated. use selection instead

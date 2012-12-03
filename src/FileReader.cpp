@@ -50,7 +50,7 @@ void FileReader::readcourses() {
 	//todo: cpp lib'e çevir. veri yapýsýndaki sýðýrlýðý düzelt.
 	ifstream input;
 	input.open("inputcse.txt");
-	char cnm[20], lnm[20];
+	string cnm, lnm;
 	int c2day, c2slot;
 	int counter = 0, i, j;
 	for (i = 0; i < CHROML; i++) {
@@ -62,12 +62,12 @@ void FileReader::readcourses() {
 	}
 	while (!input.eof()) {
 		input >> cnm;
-		if (strcmp(cnm, "C4") && strcmp(cnm, "C2")) {
+		if (cnm.compare("C4") && cnm.compare("C2") && !cnm.empty()) {
 			input >> lnm >> conf->courmat[counter].semid >> conf->courmat[counter].hours;
 			conf->courmat[counter].cname = cnm;
 			conf->courmat[counter].lname = lnm;
 			counter++;
-		} else if (!strcmp(cnm, "C2")) {
+		} else if (!cnm.compare("C2") && !cnm.empty()) {
 			input >> lnm >> c2day >> c2slot;
 			for (j = 0; j < CHROML; j++) {
 				if (conf->courmat[j].cname == lnm) {
@@ -172,7 +172,6 @@ void FileReader::readcourses() {
 			conf->lectures[lidx].haslabs = 1;
 		}
 	}
-	fflush(stdout);
 }
 void FileReader::readinputparam() {
 	fstream input("inputparam.txt");
@@ -184,7 +183,6 @@ void FileReader::readinputparam() {
 		if (line[0] == '#' || line.empty()) continue;
 		ss << line;
 		ss >> inpname >> inpval;
-		ss.clear();
 		if (!inpname.compare("dur"))
 			conf->dur = inpval;
 		else if (!inpname.compare("hillsize"))
@@ -209,12 +207,29 @@ void FileReader::readinputparam() {
 			conf->hc_max_ind = inpval;
 		else if (!inpname.compare("verbose_level"))
 			conf->verbose_level = inpval;
+		else if (!inpname.compare("hard_fitness_group")) {
+			vector<int> hardgr;
+			while(inpval != -1) {
+				hardgr.push_back(inpval);
+				ss >> inpval;
+			}
+			conf->hardgroup.push_back(hardgr);
+		}
+		else if (!inpname.compare("soft_fitness_group")) {
+			vector<int> softgr;
+			while(inpval != -1) {
+				softgr.push_back(inpval);
+				ss >> inpval;
+			}
+			conf->softgroup.push_back(softgr);
+		}
+		ss.clear();
 	}
 	input.close();
 }
 
-FileReader::FileReader(Common* c) {
-	conf = c;
+FileReader::FileReader() {
+	conf = Common::getConf();
 }
 
 void FileReader::readConst(const char *fname)
