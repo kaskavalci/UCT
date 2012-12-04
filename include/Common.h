@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <string>
+#include <list>
 #include "Course.h"
 #include "Lecture.h"
 #include "Constants.h"
@@ -19,12 +20,12 @@ namespace std {
 class Common {
 public:
 	static Common *getConf();
+	static const list<int>& getChrom();
 	virtual ~Common();
 	int findcourse(int idx);
 	int findlabcourse(int idx);
 	int findlecture(int idx);
 	int findlecturer(int idx);
-
 
 	int confmat[CHROML][CHROML];
 	int prereq[CHROML][CHROML];
@@ -56,6 +57,7 @@ public:
 private:
 	static bool instanceFlag;
 	static Common *conf;
+	static list<int> chrom;
 	Common();
 
 };

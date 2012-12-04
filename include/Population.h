@@ -33,7 +33,6 @@ private:
 	void hillclimbmix2();
 	bool foundinpar(int);
 	void print_stat();
-	int get_smallest_hfit();
 	void print_fitness(ostream &, Individual*);
 	void print_header(ostream &);
 	bool crowd_condition(vector<vector<int> >, Individual*,Individual*);
@@ -50,6 +49,7 @@ private:
 	int crossel1;
 	int crossel2;
 
+	int pareto_bestID, pareto_minHFit, pareto_minSFit;
 	int cross_suc, cross_fail, add_suc, add_fail, hc_suc, hc_fail, par_suc, par_fail, mut_suc, mut_fail;
 };
 

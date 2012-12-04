@@ -698,23 +698,30 @@ void Individual::updatefitness(int val) {
 	chromosome->updatefitness(val);
 }
 
-bool Individual::hc_worstsection() {
+bool Individual::hc_worstsection(int level) {
 	Individual subject(*this);
-	s_hard_fitness_t old_hfit, new_hfit;
-	s_soft_fitness_t old_sfit, new_sfit;
+	s_hard_fitness_t old_hfit = {{}, 0}, new_hfit = {{}, 0};
+	s_soft_fitness_t old_sfit = {{}, 0}, new_sfit = {{}, 0};
 	int rnd_slot = 0;
 	int maxdiff, maxid;
 	bool finalchange = false;
 	int j;
-
 	bool visitlist[CHROML] = { };
 
 	for (int i = 0; i < conf->hc_max_ind; ++i) {
 		//try to find a slot that has conflicts.
 		for (j = 0; j < conf->hc_max_ind; ++j) {
 			rnd_slot = RND(NCOL);
-			calc_hardfit(*subject.chromosome->get_section_list(rnd_slot), old_hfit, 0);
-			calc_softfit(*subject.chromosome->get_section_list(rnd_slot), old_sfit, 0);
+			if (level == hc_hard) {
+				calc_hardfit(*subject.chromosome->get_section_list(rnd_slot), old_hfit, 0);
+			}
+			else if (level == hc_soft) {
+				calc_softfit(*subject.chromosome->get_section_list(rnd_slot), old_sfit, 0);
+			}
+			else if (level == hc_both) {
+				calc_hardfit(*subject.chromosome->get_section_list(rnd_slot), old_hfit, 0);
+				calc_softfit(*subject.chromosome->get_section_list(rnd_slot), old_sfit, 0);
+			}
 			if (old_hfit.total_fit + old_sfit.total_fit> 0)
 				break;
 		}
@@ -745,8 +752,16 @@ bool Individual::hc_worstsection() {
 			//update the gene to selcolor, if we have any "worst" color.
 			subject.chromosome->update(sectid, selcolor);
 			//get the new fitness for comparison
-			calc_hardfit(*subject.chromosome->get_section_list(selcolor), new_hfit, 0);
-			calc_softfit(*subject.chromosome->get_section_list(selcolor), new_sfit, 0);
+			if (level == hc_hard) {
+				calc_hardfit(*subject.chromosome->get_section_list(selcolor), new_hfit, 0);
+			}
+			else if (level == hc_soft) {
+				calc_softfit(*subject.chromosome->get_section_list(selcolor), new_sfit, 0);
+			}
+			else if (level == hc_both) {
+				calc_hardfit(*subject.chromosome->get_section_list(selcolor), new_hfit, 0);
+				calc_softfit(*subject.chromosome->get_section_list(selcolor), new_sfit, 0);
+			}
 
 			if ((old_hfit.total_fit - new_hfit.total_fit) + (old_sfit.total_fit - new_sfit.total_fit) > maxdiff) {
 				maxdiff = (old_hfit.total_fit - new_hfit.total_fit) + (old_sfit.total_fit - new_sfit.total_fit);

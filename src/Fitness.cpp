@@ -14,12 +14,9 @@
 
 namespace std {
 
-Fitness::Fitness(Chromosome *chrom) {
+Fitness::Fitness(const Chromosome *chrom) {
 	this->chromosome = chrom;
 	conf = Common::getConf();
-	for (int i = 0; i < CHROML; ++i) {
-		popul.push_back(i);
-	}
 }
 
 void Fitness::calc_hardfit(const list<int>& list, s_hard_fitness_t& fit, int print) {
@@ -39,7 +36,8 @@ void Fitness::calc_softfit(const list<int>& list, s_soft_fitness_t& fit, int pri
 	s_lecturer(list, fit, print);
 	s_LTLconflict(list, fit, print);
 	s_ConsecSem(list, fit, print);
-	s_ConsecSemLab(list, fit, print);
+	fit.fitness[fit_sConsecSemLab] = 0;
+	//s_ConsecSemLab(list, fit, print);
 	s_lunch(list, fit, print);
 	s_eveningLecture(list, fit, print);
 	s_morningLab(list, fit, print);
@@ -47,7 +45,9 @@ void Fitness::calc_softfit(const list<int>& list, s_soft_fitness_t& fit, int pri
 		fit.total_fit += fit.fitness[i];
 	}
 }
-
+/*
+ * todo: conf'u deðiþtirmeden yap
+ */
 void Fitness::init_labs(int i, int j) {
 	if (conf->lectures[i].lab1day == conf->lectures[j].cid1day
 			&& (conf->lectures[i].lab1slot == 1 && (conf->lectures[j].cid1slot == 0 || conf->lectures[j].cid1slot == 1)))
@@ -97,8 +97,8 @@ void Fitness::init_labs(int i, int j) {
 }
 
 void Fitness::updatefitness(int print) {
-	calc_hardfit(popul, hard_fit, print);
-	calc_softfit(popul, soft_fit, print);
+	calc_hardfit(Common::getChrom(), hard_fit, print);
+	calc_softfit(Common::getChrom(), soft_fit, print);
 }
 
 inline bool Fitness::fit_hconfmat(int i, int j) {

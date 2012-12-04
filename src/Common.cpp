@@ -13,6 +13,7 @@ namespace std {
 
 bool Common::instanceFlag = false;
 Common * Common::conf = NULL;
+list<int> Common::chrom;
 
 Common* Common::getConf() {
 	if (!instanceFlag) {
@@ -23,6 +24,10 @@ Common* Common::getConf() {
 	else {
 		return conf;
 	}
+}
+
+const list<int>& Common::getChrom() {
+	return Common::chrom;
 }
 
 Common::Common() {
@@ -38,6 +43,9 @@ Common::Common() {
 	crowding_dist = 3;
 	hc_max_ind = 10;
 	verbose_level = 4;
+	for (int i = 0; i < CHROML; ++i) {
+		Common::chrom.push_back(i);
+	}
 }
 
 Common::~Common() {

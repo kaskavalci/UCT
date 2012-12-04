@@ -15,7 +15,7 @@ namespace std {
 class Chromosome;
 class Fitness {
 public:
-	Fitness(Chromosome *chromosome);
+	Fitness(const Chromosome *chromosome);
 	virtual ~Fitness();
 
 	void calc_hardfit(const list<int> &, s_hard_fitness_t&, int);
@@ -31,7 +31,7 @@ public:
 	}
 
 private:
-	Chromosome *chromosome;
+	const Chromosome *chromosome;
 	Common *conf;
 	inline bool fit_hconfmat(int i,int j);
 	inline bool fit_hsameday(int i, int j);
@@ -65,8 +65,6 @@ private:
 
 	s_hard_fitness_t hard_fit;
 	s_soft_fitness_t soft_fit;
-
-	list<int> popul;
 };
 
 } /* namespace std */

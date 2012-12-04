@@ -26,6 +26,7 @@ enum {fit_sDepMeeting, fit_shardlab, fit_slectConsWork, fit_sLectEmptyHour, fit_
 fit_sLectNoFreeDay, fit_sLectMorningCourse, fit_sLTLconflict, fit_sConsecSemester, fit_sConsecSemLab, fit_sNoLunch,
 fit_sEveningLecture, fit_sMorningLab};
 enum {fit_hConfmat, fit_hSameDay, fit_hMidHour};
+enum {hc_hard, hc_soft, hc_both};
 
 typedef struct {
 	int fitness[HARD_FIT_N];

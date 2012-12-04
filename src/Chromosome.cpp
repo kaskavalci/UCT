@@ -58,7 +58,7 @@ void Chromosome::update_slot(int section) {
 	slot[section] = chrom[section] % PERIODS;
 }
 
-int Chromosome::get_slot(int section) {
+const int Chromosome::get_slot(int section) const{
 	return chrom[section];
 }
 

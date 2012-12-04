@@ -9,14 +9,14 @@ hillsize	1.00
 #hillrnd, used in hc1 only.
 hillrnd	0.5
 
-hillboth	0.6
+hillboth	0.4
 mutg1rate	0.008
 mutg3rate	0.008
 mutg5rate	0.008
 crrate	0.9
 randomly_insert_to_population	0.001
 crowding_dist	3
-hc_max_ind	10
+hc_max_ind	5
 
 #verbose level. Possible values:
 #	1. At every 20 iterations, print pareto front with fitness values

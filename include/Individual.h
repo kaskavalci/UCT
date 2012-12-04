@@ -24,7 +24,7 @@ public:
 	virtual ~Individual();
 
 	//bool hc1();
-	bool hc_worstsection();
+	bool hc_worstsection(int);
 
 	void cross(Individual*, Individual*);
 	int dominates(const Individual *target);
