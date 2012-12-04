@@ -57,7 +57,7 @@ Individual::Individual() {
 	chrom_length = CHROML;
 	no_colors = NCOL;
 	no_periods = 4;
-	chromosome = new Chromosome(chrom_length, no_colors);
+	chromosome = NULL;
 
 	conf = Common::getConf();
 
@@ -97,7 +97,7 @@ Individual &Individual::operator=(const Individual &source) {
 			timetable2[i][j] = source.timetable2[i][j];
 		}
 	}
-	delete (this->chromosome);
+	if (this->chromosome) delete (this->chromosome);
 	this->chromosome = new Chromosome(source.chromosome);
 	return *this;
 }

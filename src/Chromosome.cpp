@@ -20,8 +20,8 @@ Chromosome::Chromosome(const Chromosome* source) {
 	int i;
 	this->chrom_length = source->chrom_length;
 	this->no_colors = source->no_colors;
-	fit = new Fitness(source->fit);
-	fit->setChromosome(this);
+	this->fit = new Fitness(source->fit);
+	this->fit->setChromosome(this);
 
 	for (i = 0; i < NCOL; ++i) {
 		this->slot_map[i] = source->slot_map[i];
