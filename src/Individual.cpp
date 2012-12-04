@@ -177,24 +177,24 @@ void Individual::cross(Individual* p1, Individual *p2) {
 int Individual::dominates(const Individual *target) {
 	enum {soft, hard};
 	bool target_dominates[2] = {true, true}, this_dominates[2] = {true, true};
-	int tot_subj, tot_targ;
+	int tot_this, tot_targ;
 	for (vector<vector<int> >::const_iterator group = conf->hardgroup.begin(); group != conf->hardgroup.end(); ++group) {
-		tot_subj = tot_targ = 0;
+		tot_this = tot_targ = 0;
 		for (vector<int>::const_iterator el = group->begin(); el != group->end(); el++) {
-			tot_subj += this->getHardFit().fitness[*el];
+			tot_this += this->getHardFit().fitness[*el];
 			tot_targ += target->getHardFit().fitness[*el];
 		}
-		this_dominates[hard] &= (tot_subj <= tot_targ);
-		target_dominates[hard] &= (tot_targ <= tot_subj);
+		this_dominates[hard] &= (tot_this < tot_targ);
+		target_dominates[hard] &= (tot_targ <= tot_this);
 	}
 	for (vector<vector<int> >::const_iterator group = conf->softgroup.begin(); group != conf->softgroup.end(); ++group) {
-		tot_subj = tot_targ = 0;
+		tot_this = tot_targ = 0;
 		for (vector<int>::const_iterator el = group->begin(); el != group->end(); el++) {
-			tot_subj += this->getSoftFit().fitness[*el];
+			tot_this += this->getSoftFit().fitness[*el];
 			tot_targ += target->getSoftFit().fitness[*el];
 		}
-		this_dominates[soft] &= (tot_subj <= tot_targ);
-		target_dominates[soft] &= (tot_targ <= tot_subj);
+		this_dominates[soft] &= (tot_this < tot_targ);
+		target_dominates[soft] &= (tot_targ <= tot_this);
 	}
 	//target is dominated by this, in soft and hard constraints
 	if (this_dominates[hard] && this_dominates[soft]) {

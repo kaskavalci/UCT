@@ -225,7 +225,7 @@ bool Population::add_to_pareto(int idx) {
 			return false;
 		}
 	}
-	//there is no domination but hard fitness are not dominated by candidate. We don't want hard fitness to increase.
+	//there is no domination but fitness are not dominated by candidate. We don't want hard fitness to increase.
 	if (non_dominated_ind.size() == 0) {
 		return false;
 	}
