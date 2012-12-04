@@ -16,8 +16,8 @@ class Chromosome;
 class Fitness {
 public:
 	Fitness(const Chromosome *chromosome);
+	Fitness(const Fitness*);
 	virtual ~Fitness();
-
 	void calc_hardfit(const list<int> &, s_hard_fitness_t&, int);
 	void calc_softfit(const list<int> &, s_soft_fitness_t&, int);
 	void updatefitness(int);
@@ -30,9 +30,16 @@ public:
 		return soft_fit;
 	}
 
+	void setChromosome(const Chromosome* chromosome) {
+		this->chromosome = chromosome;
+	}
+
 private:
 	const Chromosome *chromosome;
 	Common *conf;
+	s_hard_fitness_t hard_fit;
+	s_soft_fitness_t soft_fit;
+
 	inline bool fit_hconfmat(int i,int j);
 	inline bool fit_hsameday(int i, int j);
 	inline bool fit_hmidday(int i, int j);
@@ -61,10 +68,6 @@ private:
 
 	void init_labs(int, int);
 	int decode(int);
-	vector<int> conflv;
-
-	s_hard_fitness_t hard_fit;
-	s_soft_fitness_t soft_fit;
 };
 
 } /* namespace std */

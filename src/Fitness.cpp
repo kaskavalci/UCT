@@ -17,6 +17,19 @@ namespace std {
 Fitness::Fitness(const Chromosome *chrom) {
 	this->chromosome = chrom;
 	conf = Common::getConf();
+	for (int i = 0; i < HARD_FIT_N; ++i) {
+		hard_fit.fitness[i] = 0;
+	}
+	for (int i = 0; i < SOFT_FIT_N; ++i) {
+		soft_fit.fitness[i] = 0;
+	}
+}
+
+Fitness::Fitness(const Fitness* source) {
+	conf = Common::getConf();
+	chromosome = NULL;
+	hard_fit = source->hard_fit;
+	soft_fit = source->soft_fit;
 }
 
 void Fitness::calc_hardfit(const list<int>& list, s_hard_fitness_t& fit, int print) {
@@ -36,7 +49,6 @@ void Fitness::calc_softfit(const list<int>& list, s_soft_fitness_t& fit, int pri
 	s_lecturer(list, fit, print);
 	s_LTLconflict(list, fit, print);
 	s_ConsecSem(list, fit, print);
-	fit.fitness[fit_sConsecSemLab] = 0;
 	//s_ConsecSemLab(list, fit, print);
 	s_lunch(list, fit, print);
 	s_eveningLecture(list, fit, print);

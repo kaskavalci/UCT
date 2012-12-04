@@ -16,7 +16,7 @@ namespace std {
 class Chromosome {
 public:
 	Chromosome(int chrom_length, int no_colors);
-	Chromosome(Chromosome*);
+	Chromosome(const Chromosome*);
 	virtual ~Chromosome();
 
 	void updatefitness(int);

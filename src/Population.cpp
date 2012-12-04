@@ -113,7 +113,7 @@ void Population::tournament(Individual* parent) {
 			max = domination[i];
 			maxid = i;
 		}
-		//we have individuals that have same domination values.
+		//we have individuals that have same domination values. Initiate crowding distance calculation
 		else if (domination[i] == max) {
 			equal_domination = true;
 		}
@@ -121,7 +121,7 @@ void Population::tournament(Individual* parent) {
 	itc = candidate.begin();
 	if (maxid != -1) {
 		advance(itc, maxid);
-		parent = pop[*itc];
+		(*parent) = (*pop[*itc]);
 		return;
 	} else if (maxid == -1 || equal_domination) {
 		int min_nitch = POPUL * 2; //give min a high number
@@ -136,14 +136,14 @@ void Population::tournament(Individual* parent) {
 		}
 		//YAY! we found the minimum.
 		if (it_min != candidate.end()) {
-			parent = pop[*itc];
+			(*parent) = (*pop[*itc]);
 		}
 		//This is odd. We should have found something. For the sake of stability, select a random candidate
 		else {
 			cerr << "No suitable candidate from tournament." << endl;
 			itc = candidate.begin();
 			advance(itc, RND(TOURNAMENT_CANDIDATE_N));
-			parent = pop[*itc];
+			(*parent) = (*pop[*itc]);
 		}
 	}
 }
@@ -155,16 +155,9 @@ void Population::selection(Individual*parent1, Individual*parent2) {
 
 void Population::crossover() {
 	int crossrate = (int) (POPUL * conf->crrate / 2);
-	Individual *parent1 = new Individual(conf), *parent2 = new Individual(conf), *child = NULL;
-	bool create_child = true;
+	Individual *parent1 = new Individual(), *parent2 = new Individual(), *child = new Individual();
 	int old, now;
 	for (int i = 0; i < crossrate; ++i) {
-		if (create_child) {
-			child = new Individual();
-			child->setConf(conf);
-			create_child = false;
-		}
-
 		selection(parent1, parent2);
 		child->cross(parent1, parent2);
 		child->buildtimetable();
@@ -175,7 +168,7 @@ void Population::crossover() {
 		} else
 			cross_fail++;
 
-		child->hc_worstsection(hc_hard);
+		//child->hc_worstsection(hc_hard);
 		now = child->getHardFit().total_fit;
 		if (now < old)
 			hc_suc++;
@@ -183,15 +176,12 @@ void Population::crossover() {
 			hc_fail++;
 
 		if (add_to_population(child)) {
-			create_child = true;
 			add_suc++;
 		} else {
 			add_fail++;
 		}
 	}
-	if (!create_child) {
-		delete (child);
-	}
+	delete (child);
 	delete (parent1);
 	delete (parent2);
 }
@@ -304,8 +294,7 @@ bool Population::add_to_population(Individual* candidate) {
 	for (int i = 0; i < POPUL; ++i) {
 		if (!inpf3[i]) {
 			if (candidate->dominates(pop[i]) == D_TRUE) {
-				delete (pop[i]);
-				pop[i] = candidate;
+				(*pop[i]) = (*candidate);
 				if (add_to_pareto(i))
 					par_suc++;
 				return true;
@@ -323,8 +312,7 @@ bool Population::add_to_population(Individual* candidate) {
 		do {
 			rnd_pos = RND(POPUL);
 		} while (inpf3[rnd_pos]);
-		delete (pop[rnd_pos]);
-		pop[rnd_pos] = candidate;
+		(*pop[rnd_pos]) = (*candidate);
 		return true;
 	}
 	return false;

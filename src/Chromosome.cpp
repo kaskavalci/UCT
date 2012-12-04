@@ -16,11 +16,12 @@ Chromosome::Chromosome(int chrom_length, int no_colors) {
 	fit = new Fitness(this);
 }
 
-Chromosome::Chromosome(Chromosome* source) {
+Chromosome::Chromosome(const Chromosome* source) {
 	int i;
 	this->chrom_length = source->chrom_length;
 	this->no_colors = source->no_colors;
-	fit = new Fitness(this);
+	fit = new Fitness(source->fit);
+	fit->setChromosome(this);
 
 	for (i = 0; i < NCOL; ++i) {
 		this->slot_map[i] = source->slot_map[i];

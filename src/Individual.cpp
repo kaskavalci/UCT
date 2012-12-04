@@ -59,7 +59,7 @@ Individual::Individual() {
 	no_periods = 4;
 	chromosome = new Chromosome(chrom_length, no_colors);
 
-	conf = NULL;
+	conf = Common::getConf();
 
 	for (i = 0; i < 5; i++) {
 		for (j = 0; j < 4; j++) {
@@ -97,6 +97,7 @@ Individual &Individual::operator=(const Individual &source) {
 			timetable2[i][j] = source.timetable2[i][j];
 		}
 	}
+	delete (this->chromosome);
 	this->chromosome = new Chromosome(source.chromosome);
 	return *this;
 }
@@ -184,7 +185,7 @@ int Individual::dominates(const Individual *target) {
 			tot_this += this->getHardFit().fitness[*el];
 			tot_targ += target->getHardFit().fitness[*el];
 		}
-		this_dominates[hard] &= (tot_this < tot_targ);
+		this_dominates[hard] &= (tot_this <= tot_targ);
 		target_dominates[hard] &= (tot_targ <= tot_this);
 	}
 	for (vector<vector<int> >::const_iterator group = conf->softgroup.begin(); group != conf->softgroup.end(); ++group) {
@@ -193,7 +194,7 @@ int Individual::dominates(const Individual *target) {
 			tot_this += this->getSoftFit().fitness[*el];
 			tot_targ += target->getSoftFit().fitness[*el];
 		}
-		this_dominates[soft] &= (tot_this < tot_targ);
+		this_dominates[soft] &= (tot_this <= tot_targ);
 		target_dominates[soft] &= (tot_targ <= tot_this);
 	}
 	//target is dominated by this, in soft and hard constraints

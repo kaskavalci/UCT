@@ -40,10 +40,6 @@ public:
 	const s_hard_fitness_t& getHardFit() const;
 	const s_soft_fitness_t& getSoftFit() const;
 
-	void setConf(Common*& conf) {
-		this->conf = conf;
-	}
-
 private:
 	int findcourse(int sem, int dy, int slt);
 
