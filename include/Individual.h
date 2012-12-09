@@ -55,7 +55,7 @@ private:
 
 	struct compare {
 		inline bool operator() (const sorted_list_t & p1, const sorted_list_t & p2) const {
-			return (p1.max < p2.max);
+			return (p1.max > p2.max);
 		}
 	};
 

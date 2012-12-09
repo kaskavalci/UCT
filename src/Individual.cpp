@@ -748,11 +748,14 @@ bool Individual::hc_worstsection(int level) {
 		}
 	}
 	sort(sortedListHard.begin(), sortedListHard.end(), compare());
-	vector<sorted_list_t>::iterator itt = sortedListHard.begin();
-	vector<sorted_list_t>::reverse_iterator rit = sortedListHard.rbegin();
+	sort(sortedListSoft.begin(), sortedListSoft.end(), compare());
 
-	for (int i = 0; i < conf->hc_max_ind && rit != sortedListHard.rend(); ++i, ++rit) {
-		if (rit->max == 0) {
+	vector<sorted_list_t>::reverse_iterator ritHard, ritSoft;
+	ritHard = sortedListHard.rbegin();
+	ritSoft = sortedListSoft.rbegin();
+
+	for (int i = 0; i < conf->hc_max_ind && ritHard != sortedListHard.rend(); ++i, ++ritHard) {
+		if (ritHard->max == 0) {
 			//yay! perfect individual. no need for hill climbing!
 			return false;
 		}
@@ -761,11 +764,11 @@ bool Individual::hc_worstsection(int level) {
 		int maxdiff = 0, maxid = -1;
 		for (int selcolor = 0; selcolor < NCOL; selcolor++) {
 			//mutate the child's gene in the longest_slot list for every color except for its own
-			if (selcolor == rit->targetSlot) {
+			if (selcolor == ritHard->targetSlot) {
 				continue;
 			}
 			//update the gene to selcolor, if we have any "worst" color.
-			subject.chromosome->update(rit->targetSect, selcolor);
+			subject.chromosome->update(ritHard->targetSect, selcolor);
 			//get the new fitness for comparison
 			if (level == hc_hard) {
 				subject.calc_hardfit(target_newHFit, 0);
@@ -797,12 +800,12 @@ bool Individual::hc_worstsection(int level) {
 				maxid = selcolor;
 			}*/
 			//un-stage changes
-			subject.chromosome->update(rit->targetSect, rit->targetSlot);
+			subject.chromosome->update(ritHard->targetSect, ritHard->targetSlot);
 		}
 
 		//if difference is larger than 0, then we found a better slot for that section.
 		if (maxdiff > 0 && maxid != -1) {
-			chromosome->update(rit->targetSect, maxid);
+			chromosome->update(ritHard->targetSect, maxid);
 			buildtimetable();
 			updatefitness(0);
 			finalchange = true;
