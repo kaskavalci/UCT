@@ -18,8 +18,8 @@ public:
 	Fitness(const Chromosome *chromosome);
 	Fitness(const Fitness*);
 	virtual ~Fitness();
-	void calc_hardfit(const list<int> &, s_hard_fitness_t&, int);
-	void calc_softfit(const list<int> &, s_soft_fitness_t&, int);
+	void calc_hardfit(s_hard_fitness_t&, int);
+	void calc_softfit(s_soft_fitness_t&, int);
 	void updatefitness(int);
 
 	const s_hard_fitness_t& getHardFit() const {
@@ -48,25 +48,25 @@ private:
 	inline bool fit_sconssem1(int i, int j);
 	inline bool fit_sconssem2(int i, int j);
 	inline bool fit_sconssem3(int i, int j);
-	inline bool fit_sconssemlab1(int i, int j);
-	inline bool fit_sconssemlab2(int i, int j);
-	inline bool fit_sconssemlab3(int i, int j);
+	inline bool fit_sconssemlab1(vector<Lecture>::iterator i, vector<Lecture>::iterator j);
+	inline bool fit_sconssemlab2(vector<Lecture>::iterator i, vector<Lecture>::iterator j);
+	inline bool fit_sconssemlab3(vector<Lecture>::iterator i, vector<Lecture>::iterator j);
 	inline bool fit_signoredlunchconflict(int i, int j);
 
-	inline void h_confmat(const list<int>&,  s_hard_fitness_t&, int);
-	inline void h_sameday(const list<int>&, s_hard_fitness_t&, int);
-	inline void h_midday(const list<int>&, s_hard_fitness_t&, int);
-	inline void s_depmet(const list<int>&, s_soft_fitness_t&, int);
-	inline void s_hwlab(const list<int>&, s_soft_fitness_t&, int);
-	inline void s_lecturer(const list<int>&, s_soft_fitness_t&, int);
-	inline void s_LTLconflict(const list<int>&, s_soft_fitness_t&, int);
-	inline void s_ConsecSemLab(const list<int>&, s_soft_fitness_t&, int);
-	inline void s_ConsecSem(const list<int>&, s_soft_fitness_t&, int);
-	inline void s_lunch(const list<int>&, s_soft_fitness_t&, int);
-	inline void s_eveningLecture(const list<int>&, s_soft_fitness_t&, int);
-	inline void s_morningLab(const list<int>&, s_soft_fitness_t&, int);
+	inline void h_confmat(s_hard_fitness_t&, int);
+	inline void h_sameday(s_hard_fitness_t&, int);
+	inline void h_midday(s_hard_fitness_t&, int);
+	inline void s_depmet(s_soft_fitness_t&, int);
+	inline void s_hwlab(s_soft_fitness_t&, int);
+	inline void s_lecturer(s_soft_fitness_t&, int);
+	inline void s_LTLconflict(s_soft_fitness_t&, int);
+	inline void s_ConsecSemLab(s_soft_fitness_t&, int);
+	inline void s_ConsecSem(s_soft_fitness_t&, int);
+	inline void s_lunch(s_soft_fitness_t&, int);
+	inline void s_eveningLecture(s_soft_fitness_t&, int);
+	inline void s_morningLab(s_soft_fitness_t&, int);
 
-	void init_labs(int, int);
+	void init_labs(vector<Lecture>::iterator, vector<Lecture>::iterator);
 	int decode(int);
 };
 

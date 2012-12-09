@@ -66,35 +66,22 @@ int Common::findcourse(int idx) {
 		retv = i;
 	return retv;
 }
-
+/*
+ * returns "the position" in labcourses vector, if idx is found.
+ * returns -1 otherwise.
+ */
 int Common::findlabcourse(int idx) {
-	int retv = -1;
-	size_t i;
-	int found = 0;
-	for (i = 0; i < labcourses.size(); i++) {
-		if (courmat[idx].cname.substr(0, 6) == labcourses[i]) {
-			found = 1;
-			break;
-		}
+	for (vector<labSession_t>::const_iterator it = labcourses.begin(); it != labcourses.end(); ++it) {
+		if (it->idx == idx) return (it - labcourses.begin());
 	}
-	if (found == 1)
-		retv = i;
-	return retv;
+	return -1;
 }
 
 int Common::findlecture(int idx) {
-	int retv = -1;
-	size_t i;
-	int found = 0;
-	for (i = 0; i < lectures.size(); i++) {
-		if (courmat[idx].cname.substr(0, 6) == lectures[i].lectname) {
-			found = 1;
-			break;
-		}
+	for (vector<Lecture>::const_iterator it = lectures.begin(); it != lectures.end(); ++it) {
+		if (it->cormat_id == idx) return (it - lectures.begin());
 	}
-	if (found == 1)
-		retv = i;
-	return retv;
+	return -1;
 }
 
 int Common::findlecturer(int idx) {

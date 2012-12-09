@@ -12,6 +12,7 @@
 #include <iostream>
 #include <string.h>
 #include <sstream>
+#include <algorithm>
 
 namespace std {
 
@@ -90,11 +91,12 @@ void FileReader::readcourses() {
 			conf->courses.push_back(conf->courmat[i].cname);
 		if (conf->courmat[i].cname.size() > 8 && conf->courmat[i].cname.at(7) == 'L'
 				&& conf->findlabcourse(i) == -1)
-			conf->labcourses.push_back(conf->courmat[i].cname.substr(0, 6));
+			conf->labcourses.push_back(labSession_t(conf->courmat[i].cname.substr(0, 6), i));
 		if (conf->findlecturer(i) == -1)
 			conf->lecturers.push_back(conf->courmat[i].lname);
 		if (conf->findlecture(i) == -1 && conf->courmat[i].cname.substr(0, 3) == "cse") {
 			tmplect.lectname = conf->courmat[i].cname.substr(0, 6);
+			tmplect.cormat_id = i;
 			tmplect.semid = -1;
 			tmplect.cid1 = -1;
 			tmplect.cid2 = -1;
@@ -133,41 +135,34 @@ void FileReader::readcourses() {
 		if (conf->courmat[i].cname.substr(0, 3) == "cse")
 			conf->cse[i] = 1;
 		if (conf->courmat[i].cname.at(7) == '0' && conf->courmat[i].hours == 1
-				&& conf->courmat[i].cname.at(8) == '1') {
-			lidx = conf->findlecture(i);
+				&& conf->courmat[i].cname.at(8) == '1' && (lidx = conf->findlecture(i)) >= 0) {
 			conf->lectures[lidx].cid1 = i;
 			conf->lectures[lidx].semid = conf->courmat[i].semid;
 		}
 		if (conf->courmat[i].cname.at(7) == '0' && conf->courmat[i].hours == 2
-				&& conf->courmat[i].cname.at(8) == '1') {
-			lidx = conf->findlecture(i);
+				&& conf->courmat[i].cname.at(8) == '1'  && (lidx = conf->findlecture(i)) >= 0) {
 			conf->lectures[lidx].cid2 = i;
 			conf->lectures[lidx].semid = conf->courmat[i].semid;
 		}
 		if (conf->courmat[i].cname.at(7) == '0' && conf->courmat[i].hours == 1
-				&& conf->courmat[i].cname.at(8) == '2') {
-			lidx = conf->findlecture(i);
+				&& conf->courmat[i].cname.at(8) == '2'  && (lidx = conf->findlecture(i)) >= 0) {
 			conf->lectures[lidx].cid3 = i;
 		}
 		if (conf->courmat[i].cname.at(7) == '0' && conf->courmat[i].hours == 2
-				&& conf->courmat[i].cname.at(8) == '2') {
-			lidx = conf->findlecture(i);
+				&& conf->courmat[i].cname.at(8) == '2'  && (lidx = conf->findlecture(i)) >= 0) {
 			conf->lectures[lidx].cid4 = i;
 		}
 		if (conf->courmat[i].cname.at(7) == 'L' && conf->courmat[i].cname.at(8) == '1'
-				&& conf->courmat[i].hours == 2) {
-			lidx = conf->findlecture(i);
+				&& conf->courmat[i].hours == 2  && (lidx = conf->findlecture(i)) >= 0) {
 			conf->lectures[lidx].lab1 = i;
 			conf->lectures[lidx].haslabs = 1;
 		}
 		if (conf->courmat[i].cname.at(7) == 'L' && conf->courmat[i].cname.at(8) == '2'
-				&& conf->courmat[i].hours == 2) {
-			lidx = conf->findlecture(i);
+				&& conf->courmat[i].hours == 2  && (lidx = conf->findlecture(i)) >= 0) {
 			conf->lectures[lidx].lab2 = i;
 			conf->lectures[lidx].haslabs = 1;
 		}
-		if (conf->courmat[i].cname.at(7) == 'L' && conf->courmat[i].hours == 1) {
-			lidx = conf->findlecture(i);
+		if (conf->courmat[i].cname.at(7) == 'L' && conf->courmat[i].hours == 1  && (lidx = conf->findlecture(i)) >= 0) {
 			conf->lectures[lidx].lab3 = i;
 			conf->lectures[lidx].haslabs = 1;
 		}
@@ -180,7 +175,7 @@ void FileReader::readinputparam() {
 	string line;
 	stringstream ss (stringstream::in | stringstream::out);
 	while (getline(input, line)) {
-		if (line[0] == '#' || line.empty()) continue;
+		if (line.empty() || line.at(0) == '#') continue;
 		ss << line;
 		ss >> inpname >> inpval;
 		if (!inpname.compare("dur"))

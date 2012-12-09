@@ -16,6 +16,7 @@ class Lecture {
 public:
 	string lectname;
 	string lectname2;
+	int cormat_id;
 	int semid;
 	int cid1;
 	int cid2;

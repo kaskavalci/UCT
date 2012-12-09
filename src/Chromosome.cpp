@@ -43,15 +43,17 @@ void Chromosome::add(int section, int val) {
 	day[section] = val / PERIODS;
 	slot[section] = val % PERIODS;
 }
-
-void Chromosome::update(int section, int val) {
+/*
+ * update given section to given slot.
+ */
+void Chromosome::update(int section, int _slot) {
 	//remove destination slot from slot_map.
 	slot_map[chrom[section]].remove(section);
-	chrom[section] = val;
+	chrom[section] = _slot;
 	//add the slot to appropriate position
-	slot_map[val].push_back(section);
-	day[section] = val / PERIODS;
-	slot[section] = val % PERIODS;
+	slot_map[_slot].push_back(section);
+	day[section] = _slot / PERIODS;
+	slot[section] = _slot % PERIODS;
 }
 
 void Chromosome::update_slot(int section) {
@@ -77,12 +79,12 @@ void Chromosome::updatefitness(int val) {
 	fit->updatefitness(val);
 }
 
-void Chromosome::calc_hardfit(const std::list<int>& list, s_hard_fitness_t& fitness, int print) {
-	fit->calc_hardfit(list, fitness, print);
+void Chromosome::calc_hardfit(s_hard_fitness_t& fitness, int print) {
+	fit->calc_hardfit(fitness, print);
 }
 
-void Chromosome::calc_softfit(const list<int>& list, s_soft_fitness_t& fitness, int print) {
-	fit->calc_softfit(list, fitness, print);
+void Chromosome::calc_softfit(s_soft_fitness_t& fitness, int print) {
+	fit->calc_softfit(fitness, print);
 
 }
 

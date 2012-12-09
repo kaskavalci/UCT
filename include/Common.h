@@ -33,7 +33,7 @@ public:
 	Course courmat[CHROML];
 	vector<string> courses;
 	vector<string> lecturers;
-	vector<string> labcourses;
+	vector<labSession_t> labcourses;
 	vector<Lecture> lectures;
 	int cid[CHROML];
 	int lectid[CHROML];

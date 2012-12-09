@@ -27,15 +27,17 @@ private:
 	void mutation();
 	bool add_to_population(Individual*);
 	bool add_to_pareto(int);
-	void selection(Individual*, Individual*);
-	void tournament(Individual*);
+	void tournament(Individual**);
 	int calc_crowd(int, const vector<int>&);
 	void hillclimbmix2();
 	bool foundinpar(int);
-	void print_stat();
-	void print_fitness(ostream &, Individual*);
+	inline void print_stat();
+	inline void print_fitness(ostream &, Individual*);
 	void print_header(ostream &);
 	bool crowd_condition(vector<vector<int> >, Individual*,Individual*);
+	inline void update_pareto(int);
+	inline void update_pareto(int, int);
+	inline void update_bestInd(int);
 
 	bool updatePareto;
 
