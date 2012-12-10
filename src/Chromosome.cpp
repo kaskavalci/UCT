@@ -27,8 +27,6 @@ Chromosome::Chromosome(const Chromosome* source) {
 		this->slot_map[i] = source->slot_map[i];
 	}
 	for (i = 0; i < CHROML; ++i) {
-		this->day[i] = source->day[i];
-		this->slot[i] = source->slot[i];
 		this->chrom[i] = source->chrom[i];
 	}
 }
@@ -40,8 +38,6 @@ Chromosome::~Chromosome() {
 void Chromosome::add(int section, int val) {
 	chrom[section] = val;
 	slot_map[val].push_back(section);
-	day[section] = val / PERIODS;
-	slot[section] = val % PERIODS;
 }
 /*
  * update given section to given slot.
@@ -52,13 +48,6 @@ void Chromosome::update(int section, int _slot) {
 	chrom[section] = _slot;
 	//add the slot to appropriate position
 	slot_map[_slot].push_back(section);
-	day[section] = _slot / PERIODS;
-	slot[section] = _slot % PERIODS;
-}
-
-void Chromosome::update_slot(int section) {
-	day[section] = chrom[section] / PERIODS;
-	slot[section] = chrom[section] % PERIODS;
 }
 
 const int Chromosome::get_slot(int section) const{

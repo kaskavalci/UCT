@@ -17,7 +17,7 @@
 namespace std {
 
 Individual::Individual(Common *conf) {
-	int i, j, cnt = 0;
+	int i, j;
 
 	this->conf = conf;
 	chrom_length = CHROML;
@@ -26,16 +26,9 @@ Individual::Individual(Common *conf) {
 
 	for (i = 0; i < CHROML; i++) {
 		if (conf->courmat[i].has_constraint == 1) {
-			chromosome->add(i, cnt % NCOL);
-			cnt++;
+			chromosome->add(i, 4 * conf->courmat[i].c2day + conf->courmat[i].c2slot);
 		} else {
 			chromosome->add(i, RND(NCOL));
-		}
-	}
-	for (i = 0; i < 5; i++) {
-		for (j = 0; j < 4; j++) {
-			timetable1[i][j] = -1;
-			timetable2[i][j] = -1;
 		}
 	}
 	for (i = 0; i < CHROML; i++) {
@@ -49,24 +42,15 @@ Individual::Individual(Common *conf) {
 			}
 		}
 	}
-	buildtimetable();
 	chromosome->updatefitness(0);
 }
 
 Individual::Individual() {
-	int i, j;
 	chrom_length = CHROML;
 	no_periods = 4;
 	chromosome = new Chromosome(chrom_length, NCOL);
 
 	conf = Common::getConf();
-
-	for (i = 0; i < 5; i++) {
-		for (j = 0; j < 4; j++) {
-			timetable1[i][j] = -1;
-			timetable2[i][j] = -1;
-		}
-	}
 }
 
 Individual::~Individual() {
@@ -74,14 +58,6 @@ Individual::~Individual() {
 }
 
 Individual::Individual(const Individual& source) {
-	int i, j;
-	for (i = 0; i < 5; i++) {
-		for (j = 0; j < 4; j++) {
-			timetable1[i][j] = source.timetable1[i][j];
-			timetable2[i][j] = source.timetable2[i][j];
-		}
-	}
-
 	this->chromosome = new Chromosome(source.chromosome);
 	this->chrom_length = source.chrom_length;
 	this->conf = source.conf;
@@ -89,13 +65,6 @@ Individual::Individual(const Individual& source) {
 }
 
 Individual &Individual::operator=(const Individual &source) {
-	int i, j;
-	for (i = 0; i < 5; i++) {
-		for (j = 0; j < 4; j++) {
-			timetable1[i][j] = source.timetable1[i][j];
-			timetable2[i][j] = source.timetable2[i][j];
-		}
-	}
 	if (this->chromosome)
 		delete (this->chromosome);
 	this->chromosome = new Chromosome(source.chromosome);
@@ -231,40 +200,40 @@ void Individual::printlect() {
 				lectmatrix[m][n] = 0;
 		}
 		for (m = 0; m < CHROML; m++) {
-			if (conf->lecturers[h] == conf->courmat[m].lname) {
+			if (conf->lecturers[h].name == conf->courmat[m].lname) {
 				if (conf->courmat[m].hours == 1) {
-					switch (chromosome->slot[m]) {
+					switch (chromosome->get_period(m)) {
 					case 0:
-						lectmatrix[chromosome->day[m]][2] = 1;
+						lectmatrix[chromosome->get_day(m)][2] = 1;
 						break;
 					case 1:
-						lectmatrix[chromosome->day[m]][3] = 1;
+						lectmatrix[chromosome->get_day(m)][3] = 1;
 						break;
 					case 2:
-						lectmatrix[chromosome->day[m]][4] = 1;
+						lectmatrix[chromosome->get_day(m)][4] = 1;
 						break;
 					case 3:
-						lectmatrix[chromosome->day[m]][9] = 1;
+						lectmatrix[chromosome->get_day(m)][9] = 1;
 						break;
 					}
 				}
 				if (conf->courmat[m].hours == 2) {
-					switch (chromosome->slot[m]) {
+					switch (chromosome->get_period(m)) {
 					case 0:
-						lectmatrix[chromosome->day[m]][0] = 1;
-						lectmatrix[chromosome->day[m]][1] = 1;
+						lectmatrix[chromosome->get_day(m)][0] = 1;
+						lectmatrix[chromosome->get_day(m)][1] = 1;
 						break;
 					case 1:
-						lectmatrix[chromosome->day[m]][2] = 1;
-						lectmatrix[chromosome->day[m]][3] = 1;
+						lectmatrix[chromosome->get_day(m)][2] = 1;
+						lectmatrix[chromosome->get_day(m)][3] = 1;
 						break;
 					case 2:
-						lectmatrix[chromosome->day[m]][5] = 1;
-						lectmatrix[chromosome->day[m]][6] = 1;
+						lectmatrix[chromosome->get_day(m)][5] = 1;
+						lectmatrix[chromosome->get_day(m)][6] = 1;
 						break;
 					case 3:
-						lectmatrix[chromosome->day[m]][7] = 1;
-						lectmatrix[chromosome->day[m]][8] = 1;
+						lectmatrix[chromosome->get_day(m)][7] = 1;
+						lectmatrix[chromosome->get_day(m)][8] = 1;
 						break;
 					}
 				}
@@ -273,7 +242,7 @@ void Individual::printlect() {
 		for (m = 0; m < 5; m++) {
 			for (n = 0; n < 10; n++) {
 				if (lectmatrix[m][n] == 1)
-					printf(" %-9s ", conf->lecturers[h].data());
+					printf(" %-9s ", conf->lecturers[h].name.c_str());
 				else
 					printf(" OOOOO0000 ");
 			}
@@ -282,7 +251,7 @@ void Individual::printlect() {
 		printf("\n");
 	}
 }
-
+/*
 void Individual::printdekanlik() {
 	size_t i;
 	string sched2, sched1;
@@ -586,21 +555,7 @@ void Individual::printdekanlik() {
 					conf->courmat[conf->lectures[i].lab3].cname.at(8), sched2.data());
 	}
 }
-
-void Individual::buildtimetable() {
-	int i;
-
-	for (i = 0; i < CHROML; i++) {
-		if (conf->courmat[i].has_constraint == 1) {
-			chromosome->update(i, 4 * conf->courmat[i].c2day + conf->courmat[i].c2slot);
-			//update method updates day and slot but we have to overwrite it for this occasion.
-			chromosome->day[i] = conf->courmat[i].c2day;
-			chromosome->slot[i] = conf->courmat[i].c2slot;
-		} else {
-			chromosome->update_slot(i);
-		}
-	}
-}
+*/
 
 void Individual::calc_hardfit(s_hard_fitness_t& fit, int print) {
 	chromosome->calc_hardfit(fit, print);
@@ -669,12 +624,12 @@ int Individual::findcourse(int sem, int dy, int slt) {
 	}
 	found = 0;
 	for (h = 0; h < CHROML; h++) {
-		if (conf->courmat[h].semid == sem && chromosome->day[h] == dy && conf->courmat[h].hours == 2
-				&& chromosome->slot[h] == rslot2) {
+		if (conf->courmat[h].semid == sem && chromosome->get_day(h) == dy && conf->courmat[h].hours == 2
+				&& chromosome->get_slot(h) == rslot2) {
 			found = 1;
 			break;
-		} else if (conf->courmat[h].semid == sem && chromosome->day[h] == dy && conf->courmat[h].hours == 1
-				&& chromosome->slot[h] == rslot1) {
+		} else if (conf->courmat[h].semid == sem && chromosome->get_day(h) == dy && conf->courmat[h].hours == 1
+				&& chromosome->get_slot(h) == rslot1) {
 			found = 1;
 			break;
 		}
@@ -733,42 +688,54 @@ bool Individual::hc_worstsection(int level) {
 		for (it = subject.chromosome->get_section_list(k)->begin(); it != ite; ++it) {
 			int dummy = 0;
 			//TODO: maybe multi objective?
-			for (int i = 0; i < HARD_FIT_N; ++i) {
-				dummy += old_hfit.fitnessBySect[*it][i];
+			if (level == hc_hard || level == hc_both) {
+				for (int i = 0; i < HARD_FIT_N; ++i) {
+					dummy += old_hfit.fitnessBySect[*it][i];
+				}
+				oldSlotHFit[k] += dummy;
+				sortedListHard.push_back(sorted_list_t(dummy, k, *it));
 			}
-			oldSlotHFit[k] += dummy;
-			sortedListHard.push_back(sorted_list_t(dummy, k, *it));
 
-			dummy = 0;
-			for (int i = 0; i < SOFT_FIT_N; ++i) {
-				dummy += old_sfit.fitnessBySect[*it][i];
+			if (level == hc_soft || level == hc_both) {
+				dummy = 0;
+				for (int i = 0; i < SOFT_FIT_N; ++i) {
+					dummy += old_sfit.fitnessBySect[*it][i];
+				}
+				oldSlotSFit[k] += dummy;
+				sortedListSoft.push_back(sorted_list_t(dummy, k, *it));
 			}
-			oldSlotSFit[k] += dummy;
-			sortedListSoft.push_back(sorted_list_t(dummy, k, *it));
 		}
 	}
-	sort(sortedListHard.begin(), sortedListHard.end(), compare());
-	sort(sortedListSoft.begin(), sortedListSoft.end(), compare());
 
-	vector<sorted_list_t>::reverse_iterator ritHard, ritSoft;
-	ritHard = sortedListHard.rbegin();
-	ritSoft = sortedListSoft.rbegin();
+	vector<sorted_list_t>::iterator itHard = sortedListHard.end(), itSoft = sortedListSoft.end();
+	if (level == hc_hard || level == hc_both) {
+		sort(sortedListHard.begin(), sortedListHard.end(), compare());
+		itHard = sortedListHard.begin();
+	}
+	if (level == hc_soft || level == hc_both) {
+		sort(sortedListSoft.begin(), sortedListSoft.end(), compare());
+		itSoft = sortedListSoft.begin();
+	}
 
-	for (int i = 0; i < conf->hc_max_ind && ritHard != sortedListHard.rend(); ++i, ++ritHard) {
-		if (ritHard->max == 0) {
+	for (int i = 0; i < conf->hc_max_ind && itHard != sortedListHard.end(); ++i, ++itHard) {
+		if (itHard->max == 0) {
 			//yay! perfect individual. no need for hill climbing!
 			return false;
+		}
+		//no HC for courses that have constraints. they have fixed hours.
+		if (conf->courmat[itHard->targetSect].has_constraint == 1) {
+			continue;
 		}
 		//TODO: for soft
 
 		int maxdiff = 0, maxid = -1;
 		for (int selcolor = 0; selcolor < NCOL; selcolor++) {
 			//mutate the child's gene in the longest_slot list for every color except for its own
-			if (selcolor == ritHard->targetSlot) {
+			if (selcolor == itHard->targetSlot) {
 				continue;
 			}
 			//update the gene to selcolor, if we have any "worst" color.
-			subject.chromosome->update(ritHard->targetSect, selcolor);
+			subject.chromosome->update(itHard->targetSect, selcolor);
 			//get the new fitness for comparison
 			if (level == hc_hard) {
 				subject.calc_hardfit(target_newHFit, 0);
@@ -800,13 +767,12 @@ bool Individual::hc_worstsection(int level) {
 				maxid = selcolor;
 			}*/
 			//un-stage changes
-			subject.chromosome->update(ritHard->targetSect, ritHard->targetSlot);
+			subject.chromosome->update(itHard->targetSect, itHard->targetSlot);
 		}
 
 		//if difference is larger than 0, then we found a better slot for that section.
 		if (maxdiff > 0 && maxid != -1) {
-			chromosome->update(ritHard->targetSect, maxid);
-			buildtimetable();
+			chromosome->update(itHard->targetSect, maxid);
 			updatefitness(0);
 			finalchange = true;
 		}

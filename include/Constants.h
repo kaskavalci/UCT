@@ -15,10 +15,7 @@
 #define POPUL 50
 #define PARETO_SIZE	20
 #define NCOL 20
-#define NUMX 20
-#define NMUT 1
 #define RND(NUM)	rand() % NUM
-#define COUNTABLE_SOFT_FIT_N	8
 #define TOURNAMENT_POOLSIZE	5
 #define TOURNAMENT_CANDIDATE_N	2
 
@@ -28,7 +25,7 @@ enum {D_TRUE, D_FALSE, D_NO_DOMINATION, D_NO_HARDDOMINATION};
  * last elements in enum indicates the SIZE. if you are to add new fitness, make sure capital letter SOFT_FIT and HARD_FIT
  * is at the end.
  */
-enum {fit_sDepMeeting, fit_shardlab, fit_slectConsWork, fit_sLectEmptyHour, fit_sLectOverWork,
+enum {fit_sDepMeeting, fit_shardlab, fit_slectConsWork, fit_sLectOverWork,
 fit_sLectNoFreeDay, fit_sLectMorningCourse, fit_sLTLconflict, fit_sConsecSemester, fit_sConsecSemLab, fit_sNoLunch,
 fit_sEveningLecture, fit_sMorningLab, SOFT_FIT_N};
 enum {fit_hConfmat, fit_hSameDay, fit_hMidHour, HARD_FIT_N};

@@ -43,6 +43,7 @@ bool Mutation::mutateg1() {
 		col1 = chromosome->get_slot(k);
 		col2 = RND(chromosome->no_colors);
 		for (i = 0; i < chromosome->chrom_length; i++) {
+			if (conf->courmat[i].has_constraint == 1) continue;
 			if (chromosome->get_slot(i) == col1) {
 				chromosome->update(i, col2);
 				retval = true;
@@ -71,6 +72,7 @@ bool Mutation::mutateg3() {
 		val1 = chromosome->get_slot(pos1);
 		val2 = chromosome->get_slot(pos2);
 		for (i = 0; i < chromosome->chrom_length; i++) {
+			if (conf->courmat[i].has_constraint == 1) continue;
 			if (chromosome->get_slot(i) == val1 && RND(100) < 50) {
 				chromosome->update(i, val2);
 				retval = true;
@@ -101,6 +103,7 @@ bool Mutation::mutateg5() {
 		val2 = chromosome->get_slot(pos2);
 		val3 = chromosome->get_slot(pos3);
 		for (i = 0; i < chromosome->chrom_length; i++) {
+			if (conf->courmat[i].has_constraint == 1) continue;
 			sel = RND(2);
 			if (chromosome->get_slot(i) == val3 && sel == 0 && RND(100) < 50) {
 				chromosome->update(i, val1);
@@ -113,7 +116,9 @@ bool Mutation::mutateg5() {
 	}
 	return retval;
 }
-
+/*
+ * mutates genes that does not have constraints.
+ */
 bool Mutation::mutate_all() {
 	bool retval = false;
 	retval |= mutate();

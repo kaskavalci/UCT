@@ -25,15 +25,20 @@ public:
 	void calc_softfit(s_soft_fitness_t&, int);
 	void add(int section, int slot);
 	void update(int section, int slot);
-	void update_slot(int section);
 	const int get_slot(int section) const;
 	list<int> *get_longest_slot();
 	list<int> *get_section_list(int slot);
 	const s_hard_fitness_t& get_hardfit();
 	const s_soft_fitness_t& get_softfit();
 
-	int day[CHROML];
-	int slot[CHROML];
+	inline int get_day(int section) const {
+		return chrom[section] / PERIODS;
+	}
+
+	inline int get_period(int section) const {
+		return chrom[section] % PERIODS;
+	}
+
 	int chrom_length;
 	int no_colors;
 	//holds the sections assigned to that slot. Used to directly access sections for particular slot.

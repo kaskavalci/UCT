@@ -29,6 +29,58 @@ Common* Common::getConf() {
 const list<int>& Common::getChrom() {
 	return Common::chrom;
 }
+/*
+ * adds a lecturer if not in list, otherwise update it with new course.
+ */
+int Common::add_lecturer(string name, int idx) {
+	for (vector<Lecturer>::iterator it = lecturers.begin(); it != lecturers.end(); ++it) {
+		if (it->name == name) {
+			it->myCourses.push_back(idx);
+			return it - lecturers.begin();
+		}
+	}
+	lecturers.push_back(Lecturer(name, idx));
+	return lecturers.size() - 1;
+}
+
+int Common::add_labsession(labSession_t lab) {
+	for (vector<labSession_t>::iterator it = labcourses.begin(); it != labcourses.end(); ++it) {
+		if (it->idx == lab.idx) return (it - labcourses.begin());
+	}
+	labcourses.push_back(lab);
+	return labcourses.size() - 1;
+}
+/*
+ * search for lectureID in lectures vector. if found, insert it to its courses.
+ * courses is std::set, so only unique elements will be there.
+ * lectid is hash output of lectname.
+ */
+int Common::add_lecture(string name, int lectid, int idx) {
+	for (vector<Lecture>::iterator it = lectures.begin(); it != lectures.end(); ++it) {
+		if (it->lectid == lectid) {
+			it->courses.insert(idx);
+			initlab(&*it, idx);
+			return it - lectures.begin();
+		}
+	}
+	Lecture lect(name, lectid);
+	initlab(&lect, idx);
+	lect.courses.insert(idx);
+	lectures.push_back(lect);
+	return lectures.size() - 1;
+}
+
+void Common::initlab(Lecture* lect, int idx) {
+	if (courmat[idx].isLab && courmat[idx].cname[8] == '1' && courmat[idx].hours == 2) {
+		lect->lab[lect_lab1][lect_idx] = idx;
+	}
+	if (courmat[idx].isLab && courmat[idx].cname[8] == '2' && courmat[idx].hours == 2) {
+		lect->lab[lect_lab2][lect_idx] = idx;
+	}
+	if (courmat[idx].isLab && courmat[idx].hours == 1) {
+		lect->lab[lect_lab3][lect_idx] = idx;
+	}
+}
 
 Common::Common() {
 	mutg1rate = 0.008;
@@ -46,26 +98,15 @@ Common::Common() {
 	for (int i = 0; i < CHROML; ++i) {
 		Common::chrom.push_back(i);
 	}
+	fill_n(&labid[0], CHROML, -1);
+	fill_n(&lab[0], CHROML, -1);
+	fill_n(&cse[0], CHROML, -1);
 }
 
 Common::~Common() {
 	instanceFlag = false;
 }
 
-int Common::findcourse(int idx) {
-	int retv = -1;
-	size_t i;
-	int found = 0;
-	for (i = 0; i < courses.size(); i++) {
-		if (courmat[idx].cname.substr(0, 9) == courses[i].substr(0, 9)) {
-			found = 1;
-			break;
-		}
-	}
-	if (found == 1)
-		retv = i;
-	return retv;
-}
 /*
  * returns "the position" in labcourses vector, if idx is found.
  * returns -1 otherwise.
@@ -79,24 +120,12 @@ int Common::findlabcourse(int idx) {
 
 int Common::findlecture(int idx) {
 	for (vector<Lecture>::const_iterator it = lectures.begin(); it != lectures.end(); ++it) {
-		if (it->cormat_id == idx) return (it - lectures.begin());
-	}
-	return -1;
-}
-
-int Common::findlecturer(int idx) {
-	int retv = -1;
-	size_t i;
-	int found = 0;
-	for (i = 0; i < lecturers.size(); i++) {
-		if (courmat[idx].lname == lecturers[i]) {
-			found = 1;
-			break;
+		if (it->courses.find(idx) != it->courses.end()) {
+			//item found!
+			return (it - lectures.begin());
 		}
 	}
-	if (found == 1)
-		retv = i;
-	return retv;
+	return -1;
 }
 
 } /* namespace std */

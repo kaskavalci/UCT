@@ -28,7 +28,6 @@ public:
 
 	void cross(const Individual&, const Individual&);
 	int dominates(const Individual *target);
-	void buildtimetable();
 	void printtable();
 	void printlect();
 	void printdekanlik();
@@ -45,7 +44,6 @@ private:
 
 	Chromosome *chromosome;
 	int chrom_length;
-	int timetable1[5][4], timetable2[5][4];
 	int no_periods;
 
 	struct sorted_list_t {

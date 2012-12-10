@@ -14,11 +14,15 @@ namespace std {
 
 class Course {
 public:
+	Course();
 	string cname;
 	string lname;
+	int uniqueID;
+	int lecturerID;
 	int semid;
 	int hours;
 	int has_constraint, c2day, c2slot;
+	bool isLab;
 };
 
 } /* namespace std */

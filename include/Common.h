@@ -14,6 +14,7 @@
 #include "Course.h"
 #include "Lecture.h"
 #include "Constants.h"
+#include "Lecturer.h"
 
 namespace std {
 
@@ -22,21 +23,20 @@ public:
 	static Common *getConf();
 	static const list<int>& getChrom();
 	virtual ~Common();
-	int findcourse(int idx);
 	int findlabcourse(int idx);
 	int findlecture(int idx);
-	int findlecturer(int idx);
+	int add_lecturer(string, int);
+	int add_labsession(labSession_t);
+	int add_lecture(string, int, int);
 
 	int confmat[CHROML][CHROML];
 	int prereq[CHROML][CHROML];
 
 	Course courmat[CHROML];
 	vector<string> courses;
-	vector<string> lecturers;
+	vector<Lecturer> lecturers;
 	vector<labSession_t> labcourses;
 	vector<Lecture> lectures;
-	int cid[CHROML];
-	int lectid[CHROML];
 	int labid[CHROML];
 	int lab[CHROML];
 	int cse[CHROML];
@@ -58,6 +58,7 @@ private:
 	static bool instanceFlag;
 	static Common *conf;
 	static list<int> chrom;
+	void initlab(Lecture*, int);
 	Common();
 
 };

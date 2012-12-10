@@ -15,12 +15,12 @@ namespace std {
 class FileReader {
 public:
 	FileReader();
+	void read();
+private:
+	Common *conf;
 	void readreq();
 	void readcourses();
 	void readinputparam();
-	void readConst(const char *fname);
-private:
-	Common *conf;
 };
 
 }

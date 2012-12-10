@@ -159,7 +159,6 @@ void Population::crossover() {
 		tournament(&parent1);
 		tournament(&parent2);
 		child->cross(*parent1, *parent2);
-		child->buildtimetable();
 		child->updatefitness(0);
 		old = child->getHardFit().total_fit;
 		if (old < parent1->getHardFit().total_fit && old < parent2->getHardFit().total_fit) {
@@ -205,7 +204,8 @@ bool Population::add_to_pareto(int idx) {
 		//candidate dominated perato front. update it.
 		if (domination == D_TRUE) {
 			if (pareto_bestID == paretof[i])
-				cerr << "pareto overwritten eski" << pareto_minHFit << " yeni:" << pop[idx]->getHardFit().total_fit << endl;
+				cerr << "pareto overwritten eski" << pareto_minHFit << " yeni:" << pop[idx]->getHardFit().total_fit
+						<< endl;
 			update_pareto(i, idx);
 			return true;
 		}
@@ -244,7 +244,8 @@ bool Population::add_to_pareto(int idx) {
 		if (max != 0) {
 			if (pop[paretof[maxPos]]->getHardFit().total_fit < pop[idx]->getHardFit().total_fit
 					|| (pop[paretof[maxPos]]->getHardFit().total_fit <= pop[idx]->getHardFit().total_fit
-							&& pop[paretof[maxPos]]->getHardFit().total_fit + pop[paretof[maxPos]]->getSoftFit().total_fit
+							&& pop[paretof[maxPos]]->getHardFit().total_fit
+									+ pop[paretof[maxPos]]->getSoftFit().total_fit
 									< pop[idx]->getSoftFit().total_fit + pop[idx]->getHardFit().total_fit)) {
 				cerr << "ERROR PARETO FRONT DEFORMATION" << endl;
 			}
@@ -302,7 +303,6 @@ void Population::mutation() {
 		mutator.setChromosome(pop[i]->getChromosome());
 		//if any mutation occured, re-build timetable.
 		if (mutator.mutate_all()) {
-			pop[i]->buildtimetable();
 			pop[i]->updatefitness(0);
 			if (add_to_pareto(i))
 				mut_suc++;
@@ -372,9 +372,13 @@ void Population::run(int seed) {
 		for (size_t i = 0; i < paretof.size(); i++) {
 			cout << "id\t";
 			print_fitness(cout, pop[paretof[i]]);
+			print_stat();
 		}
 	}
-
+	if (conf->verbose_level == 4) {
+		print_fitness(cout, pop[pareto_bestID]);
+		print_stat();
+	}
 	printf("# of iterations %d duration %d\n", it, (int) duration);
 	printf("# smallest  %d \n", pareto_bestID);
 	printf("THE SOULUTION IS  \n");
@@ -395,7 +399,6 @@ void Population::run(int seed) {
 	fresult << "\tduration: " << duration << "\thillrnd: " << conf->hillrnd << "\thillboth:" << conf->hillboth
 			<< "\tmutrate:" << conf->mutg1rate << "\tcrrate:" << conf->crrate << "\tinsertRate:"
 			<< conf->insert_popul_rate << "\tpspace:" << conf->crowding_dist << "\tseed:" << seed << endl;
-	print_stat();
 	fresult.flush();
 	fresult.close();
 	duration = getduration();

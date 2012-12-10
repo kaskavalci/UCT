@@ -39,6 +39,7 @@ private:
 	Common *conf;
 	s_hard_fitness_t hard_fit;
 	s_soft_fitness_t soft_fit;
+	bool labs[3];
 
 	inline bool fit_hconfmat(int i,int j);
 	inline bool fit_hsameday(int i, int j);
@@ -48,9 +49,9 @@ private:
 	inline bool fit_sconssem1(int i, int j);
 	inline bool fit_sconssem2(int i, int j);
 	inline bool fit_sconssem3(int i, int j);
-	inline bool fit_sconssemlab1(vector<Lecture>::iterator i, vector<Lecture>::iterator j);
-	inline bool fit_sconssemlab2(vector<Lecture>::iterator i, vector<Lecture>::iterator j);
-	inline bool fit_sconssemlab3(vector<Lecture>::iterator i, vector<Lecture>::iterator j);
+	inline bool fit_sconssemlab1(int, int);
+	inline bool fit_sconssemlab2(int, int);
+	inline bool fit_sconssemlab3(int, int);
 	inline bool fit_signoredlunchconflict(int i, int j);
 
 	inline void h_confmat(s_hard_fitness_t&, int);
@@ -66,7 +67,7 @@ private:
 	inline void s_eveningLecture(s_soft_fitness_t&, int);
 	inline void s_morningLab(s_soft_fitness_t&, int);
 
-	void init_labs(vector<Lecture>::iterator, vector<Lecture>::iterator);
+	void init_labs(vector<Lecture>::const_iterator, vector<Lecture>::const_iterator);
 	int decode(int);
 };
 

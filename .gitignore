@@ -11,4 +11,5 @@
 *.la
 *.a
 
-Tests\*
+Tests/
+*.exe

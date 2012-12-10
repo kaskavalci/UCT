@@ -9,38 +9,36 @@
 #define LECTURE_H_
 
 #include <string>
+#include "Course.h"
+#include <set>
+
+enum {
+	lect_lab1,lect_lab2, lect_lab3, lect_LABNUM
+};
+
+enum {lect_idx, lect_labday, lect_labslot, lect_LABATTR};
 
 namespace std {
 
 class Lecture {
 public:
+	Lecture(string,int);
 	string lectname;
-	string lectname2;
-	int cormat_id;
-	int semid;
+	int lectid;
+	set<int> courses;
 	int cid1;
 	int cid2;
-	int cid3;
-	int cid4;
-	int lab1;
-	int lab2;
-	int lab3;
+	int lab[lect_LABNUM][lect_LABATTR];
+
 	int cid1day;
-	int cid2day;
 	int cid1slot;
+	int cid2day;
 	int cid2slot;
 	int cid3day;
 	int cid4day;
 	int cid3slot;
 	int cid4slot;
-	int lab1day;
-	int lab2day;
-	int lab3day;
-	int lab1slot;
-	int lab2slot;
-	int lab3slot;
-	int haslabs;
-	int labs[3];
+
 };
 
 } /* namespace std */
