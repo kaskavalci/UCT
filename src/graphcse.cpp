@@ -17,7 +17,7 @@ int main(int argc, char*argv[]) {
 
 	unsigned long seed;
 	if (argc > 2) {
-		seed = atoi(argv[1]);
+		seed = int(argv[1]);
 	}
 	else {
 		seed = time(0);

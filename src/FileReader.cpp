@@ -13,7 +13,7 @@
 #include <string>
 #include <sstream>
 #include <algorithm>
-#include <tr1/functional>
+#include <boost/tr1/functional.hpp>
 #include "pugixml.hpp"
 
 namespace std {

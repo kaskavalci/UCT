@@ -28,6 +28,8 @@ Chromosome::Chromosome(const Chromosome* source) {
 	}
 	for (i = 0; i < CHROML; ++i) {
 		this->chrom[i] = source->chrom[i];
+		this->day[i] = source->day[i];
+		this->slot[i] = source->slot[i];
 	}
 }
 
@@ -37,6 +39,8 @@ Chromosome::~Chromosome() {
 
 void Chromosome::add(int section, int val) {
 	chrom[section] = val;
+	day[section] = val / PERIODS;
+	slot[section] = val % PERIODS;
 	slot_map[val].push_back(section);
 }
 /*
@@ -46,12 +50,10 @@ void Chromosome::update(int section, int _slot) {
 	//remove destination slot from slot_map.
 	slot_map[chrom[section]].remove(section);
 	chrom[section] = _slot;
+	day[section] = _slot / PERIODS;
+	slot[section] = _slot % PERIODS;
 	//add the slot to appropriate position
 	slot_map[_slot].push_back(section);
-}
-
-const int Chromosome::get_slot(int section) const{
-	return chrom[section];
 }
 
 list<int> *Chromosome::get_longest_slot() {

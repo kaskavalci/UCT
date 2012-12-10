@@ -367,17 +367,12 @@ void Population::run(int seed) {
 		hillclimbmix2();
 		mutation();
 	}
-
-	if (conf->verbose_level == 1 || conf->verbose_level == 3) {
+	cout << "Finished!. Min is:" << pareto_bestID << "Pareto front:" << endl;
+	if (conf->verbose_level == 1 || conf->verbose_level == 3 || conf->verbose_level == 4) {
 		for (size_t i = 0; i < paretof.size(); i++) {
-			cout << "id\t";
 			print_fitness(cout, pop[paretof[i]]);
 			print_stat();
 		}
-	}
-	if (conf->verbose_level == 4) {
-		print_fitness(cout, pop[pareto_bestID]);
-		print_stat();
 	}
 	printf("# of iterations %d duration %d\n", it, (int) duration);
 	printf("# smallest  %d \n", pareto_bestID);
