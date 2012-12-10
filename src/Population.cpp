@@ -201,9 +201,11 @@ bool Population::add_to_pareto(int idx) {
 		domination = pop[idx]->dominates(pop[paretof[i]]);
 		//candidate dominated perato front. update it.
 		if (domination == D_TRUE) {
+#ifdef VERBOSE
 			if (pareto_bestID == paretof[i])
 				cerr << "pareto overwritten eski" << pareto_minHFit << " yeni:" << pop[idx]->getHardFit().total_fit
 						<< endl;
+#endif
 			update_pareto(i, idx);
 			return true;
 		}
@@ -240,6 +242,7 @@ bool Population::add_to_pareto(int idx) {
 		}
 		//we found something!
 		if (max != 0) {
+#ifdef VERBOSE
 			if (pop[paretof[maxPos]]->getHardFit().total_fit < pop[idx]->getHardFit().total_fit
 					|| (pop[paretof[maxPos]]->getHardFit().total_fit <= pop[idx]->getHardFit().total_fit
 							&& pop[paretof[maxPos]]->getHardFit().total_fit
@@ -247,6 +250,7 @@ bool Population::add_to_pareto(int idx) {
 									< pop[idx]->getSoftFit().total_fit + pop[idx]->getHardFit().total_fit)) {
 				cerr << "ERROR PARETO FRONT DEFORMATION" << endl;
 			}
+#endif
 			update_pareto(maxPos, idx);
 			return true;
 		}
