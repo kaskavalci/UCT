@@ -34,7 +34,7 @@ private:
 	inline void print_stat();
 	inline void print_fitness(ostream &, Individual*);
 	void print_header(ostream &);
-	bool crowd_condition(vector<vector<int> >, Individual*,Individual*);
+	bool crowd_condition(vector<vector<int> >, vector<vector<int> >,Individual*,Individual*);
 	inline void update_pareto(int);
 	inline void update_pareto(int, int);
 	inline void update_bestInd(int);

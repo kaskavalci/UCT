@@ -70,16 +70,14 @@ void Population::hillclimbmix2() {
  */
 int Population::calc_crowd(int idx, const vector<int> &list) {
 	int count = 0;
-	bool statement = true;
 
 	vector<int>::const_iterator ite = list.end();
 	for (vector<int>::const_iterator it = list.begin(); it != ite; ++it) {
 		if (*it == idx)
 			continue;
-		statement &= crowd_condition(conf->hardgroup, pop[idx], pop[*it]);
-		statement &= crowd_condition(conf->softgroup, pop[idx], pop[*it]);
-		if (statement)
+		if(crowd_condition(conf->hardgroup, conf->softgroup, pop[idx], pop[*it])) {
 			count++;
+		}
 	}
 	return count;
 }
@@ -429,13 +427,21 @@ void Population::print_header(ostream &out) {
 	out << "CR+\tCR-\tHC+\tHC-\tADD+\tADD-\tPAR+\tPAR-\tMUT+\tMUT-" << endl;
 }
 
-bool Population::crowd_condition(vector<vector<int> > grup_list, Individual *subject, Individual *target) {
+bool Population::crowd_condition(vector<vector<int> > hardgroup, vector<vector<int> > softgroup, Individual *subject, Individual *target) {
 	bool statement = true;
-	for (vector<vector<int> >::const_iterator group = grup_list.begin(); group != grup_list.end(); ++group) {
+	for (vector<vector<int> >::const_iterator group = hardgroup.begin(); group != hardgroup.end(); ++group) {
 		int tot_subj = 0, tot_targ = 0;
 		for (vector<int>::const_iterator el = group->begin(); el != group->end(); el++) {
 			tot_subj += subject->getHardFit().fitness[*el];
 			tot_targ += target->getHardFit().fitness[*el];
+		}
+		statement &= (tot_targ < (tot_subj + conf->crowding_dist)) & (tot_targ > (tot_subj - conf->crowding_dist));
+	}
+	for (vector<vector<int> >::const_iterator group = softgroup.begin(); group != softgroup.end(); ++group) {
+		int tot_subj = 0, tot_targ = 0;
+		for (vector<int>::const_iterator el = group->begin(); el != group->end(); el++) {
+			tot_subj += subject->getSoftFit().fitness[*el];
+			tot_targ += target->getSoftFit().fitness[*el];
 		}
 		statement &= (tot_targ < (tot_subj + conf->crowding_dist)) & (tot_targ > (tot_subj - conf->crowding_dist));
 	}
