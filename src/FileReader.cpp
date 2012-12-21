@@ -13,7 +13,7 @@
 #include <string>
 #include <sstream>
 #include <algorithm>
-#include <boost/tr1/functional.hpp>
+#include <functional>
 #include "pugixml.hpp"
 
 namespace std {
@@ -54,7 +54,7 @@ void FileReader::readcourses() {
 		cerr << "courses.xml cannot be found. Please provide it under executable directory" << endl;
 	}
 
-	tr1::hash<string> hash;
+	hash<string> hash;
 	//traverse xml and fill courmat array
 	for (pugi::xml_node course = doc.child("CourseTable").child("Course"); course;
 			course = course.next_sibling("Course"), i++) {

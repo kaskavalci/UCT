@@ -18,16 +18,11 @@ public:
 	Fitness(const Chromosome *chromosome);
 	Fitness(const Fitness*);
 	virtual ~Fitness();
-	void calc_hardfit(s_hard_fitness_t&, int);
-	void calc_softfit(s_soft_fitness_t&, int);
-	void updatefitness(int);
+	void calcFit(int, fitness_t&,int);
+	void updateFitness(int);
 
-	const s_hard_fitness_t& getHardFit() const {
-		return hard_fit;
-	}
-
-	const s_soft_fitness_t& getSoftFit() const {
-		return soft_fit;
+	const inline fitness_t& getFit() const {
+		return fitness;
 	}
 
 	void setChromosome(const Chromosome* chromosome) {
@@ -37,8 +32,7 @@ public:
 private:
 	const Chromosome *chromosome;
 	Common *conf;
-	s_hard_fitness_t hard_fit;
-	s_soft_fitness_t soft_fit;
+	fitness_t fitness;
 	bool labs[3];
 
 	inline bool fit_hconfmat(int i,int j);
@@ -54,18 +48,18 @@ private:
 	inline bool fit_sconssemlab3(int, int);
 	inline bool fit_signoredlunchconflict(int i, int j);
 
-	inline void h_confmat(s_hard_fitness_t&, int);
-	inline void h_sameday(s_hard_fitness_t&, int);
-	inline void h_midday(s_hard_fitness_t&, int);
-	inline void s_depmet(s_soft_fitness_t&, int);
-	inline void s_hwlab(s_soft_fitness_t&, int);
-	inline void s_lecturer(s_soft_fitness_t&, int);
-	inline void s_LTLconflict(s_soft_fitness_t&, int);
-	inline void s_ConsecSemLab(s_soft_fitness_t&, int);
-	inline void s_ConsecSem(s_soft_fitness_t&, int);
-	inline void s_lunch(s_soft_fitness_t&, int);
-	inline void s_eveningLecture(s_soft_fitness_t&, int);
-	inline void s_morningLab(s_soft_fitness_t&, int);
+	inline void h_confmat(fitness_t&, int);
+	inline void h_sameday(fitness_t&, int);
+	inline void h_midday(fitness_t&, int);
+	inline void s_depmet(fitness_t&, int);
+	inline void s_hwlab(fitness_t&, int);
+	inline void s_lecturer(fitness_t&, int);
+	inline void s_LTLconflict(fitness_t&, int);
+	inline void s_ConsecSemLab(fitness_t&, int);
+	inline void s_ConsecSem(fitness_t&, int);
+	inline void s_lunch(fitness_t&, int);
+	inline void s_eveningLecture(fitness_t&, int);
+	inline void s_morningLab(fitness_t&, int);
 
 	void init_labs(vector<Lecture>::const_iterator, vector<Lecture>::const_iterator);
 	int decode(int);

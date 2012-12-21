@@ -66,29 +66,8 @@ list<int> *Chromosome::get_longest_slot() {
 	return thelist;
 }
 
-void Chromosome::updatefitness(int val) {
-	fit->updatefitness(val);
-}
-
-void Chromosome::calc_hardfit(s_hard_fitness_t& fitness, int print) {
-	fit->calc_hardfit(fitness, print);
-}
-
-void Chromosome::calc_softfit(s_soft_fitness_t& fitness, int print) {
-	fit->calc_softfit(fitness, print);
-
-}
-
 list<int> *Chromosome::get_section_list(int slot) {
 	return &slot_map[slot];
-}
-
-const s_hard_fitness_t& Chromosome::get_hardfit() {
-	return fit->getHardFit();
-}
-
-const s_soft_fitness_t& Chromosome::get_softfit() {
-	return fit->getSoftFit();
 }
 
 } /* namespace std */

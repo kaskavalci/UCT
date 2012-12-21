@@ -26,10 +26,11 @@ bool Mutation::mutate() {
 		int pos, val;
 		pos = RND(CHROML);
 		val = RND(NCOL);
+		//mutate only if no constraint given on that lecture
 		if (conf->courmat[pos].has_constraint != 1) {
 			chromosome->update(pos, val);
+			return true;
 		}
-		return true;
 	}
 	return false;
 }

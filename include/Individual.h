@@ -19,7 +19,7 @@ class Individual {
 public:
 	Individual(Common *conf);
 	Individual();
-	Individual& operator= (const Individual &source);
+	Individual& operator=(const Individual &source);
 	Individual(const Individual&);
 	virtual ~Individual();
 
@@ -27,36 +27,27 @@ public:
 	bool hc_worstsection(int);
 
 	void cross(const Individual&, const Individual&);
-	int dominates(const Individual *target);
+	domination_t dominates(const Individual *target);
 	void printtable();
 	void printlect();
 	void printdekanlik();
 	Chromosome* getChromosome();
 	void updatefitness(int);
 
-	void calc_hardfit(s_hard_fitness_t&, int);
-	void calc_softfit(s_soft_fitness_t&, int);
-	const s_hard_fitness_t& getHardFit() const;
-	const s_soft_fitness_t& getSoftFit() const;
+	/*
+	 * does not re-calculate the fitness. only gets the pre-calculated fitness
+	 * to process it. calling functions cannot change the fitness!
+	 */
+	const inline fitness_t& getFit() const {
+		return chromosome->fit->getFit();
+	}
 
 private:
 	int findcourse(int sem, int dy, int slt);
-
+	void calcFit(fitness_t&, int,int);
 	Chromosome *chromosome;
 	int chrom_length;
 	int no_periods;
-
-	struct sorted_list_t {
-		int max, targetSlot, targetSect;
-		sorted_list_t (int max, int targetSlot, int targetSect) : max(max), targetSlot(targetSlot), targetSect(targetSect) {}
-	};
-
-	struct compare {
-		inline bool operator() (const sorted_list_t & p1, const sorted_list_t & p2) const {
-			return (p1.max > p2.max);
-		}
-	};
-
 	Common *conf;
 };
 

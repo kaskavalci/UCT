@@ -11,6 +11,7 @@
 #include "Common.h"
 #include "Individual.h"
 #include <vector>
+#include "Printer.h"
 
 namespace std {
 
@@ -31,9 +32,7 @@ private:
 	int calc_crowd(int, const vector<int>&);
 	void hillclimbmix2();
 	bool foundinpar(int);
-	inline void print_stat();
 	inline void print_fitness(ostream &, Individual*);
-	void print_header(ostream &);
 	bool crowd_condition(vector<vector<int> >, vector<vector<int> >,Individual*,Individual*);
 	inline void update_pareto(int);
 	inline void update_pareto(int, int);
@@ -50,9 +49,10 @@ private:
 	vector<Individual*> pop;
 	int crossel1;
 	int crossel2;
+	Printer *printer;
 
-	int pareto_bestID, pareto_minHFit, pareto_minSFit;
-	int cross_suc, cross_fail, add_suc, add_fail, hc_suc, hc_fail, par_suc, par_fail, mut_suc, mut_fail;
+	int stats[STAT_LEN];
+	int pareto_bestID, pareto_minHFit;
 };
 
 } /* namespace std */
