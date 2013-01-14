@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/">
+        <file>Resource/UCT.ico</file>
+    </qresource>
+</RCC>
