@@ -15,14 +15,13 @@ namespace std {
 
 class Mutation {
 public:
-	Mutation(Common *conf);
+	Mutation(Chromosome *);
 	virtual ~Mutation();
 	bool mutate();
 	bool mutateg1();
 	bool mutateg3();
 	bool mutateg5();
 	bool mutate_all();
-	void setChromosome(Chromosome* chromosome);
 
 private:
 	Chromosome *chromosome;

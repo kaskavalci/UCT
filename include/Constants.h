@@ -10,21 +10,17 @@
 
 #include <string>
 #include <cstdint>
-#include <boost/array.hpp>
+#include <array>
+#include <vector>
 
 #define PERIODS	4
-#define CHROML 125
-#define POPUL 50
-#define PARETO_SIZE	20
 #define NCOL 20
 #define RND(NUM)	rand() % NUM
-#define TOURNAMENT_POOLSIZE	5
-#define TOURNAMENT_CANDIDATE_N	2
 
 enum {D_TRUE, D_FALSE, D_NO_DOMINATION};
 
 /*
- * last elements in enum indicates the SIZE. if you are to add new fitness, make sure capital letter SOFT_FIT and HARD_FIT
+ * last elements in enum indicates the SIZE. if you are to add new fitness, make sure capital letter SOFT_FIT and TOT_FIT_N
  * is at the end.
  */
 enum e_HardFitness {fit_hConfmat, fit_hSameDay, fit_hMidHour, HARD_FIT_N};
@@ -38,8 +34,8 @@ fit_sEveningLecture, fit_sMorningLab, TOT_FIT_N};
  * m_GeneTotal is total fitness value caused by that particular gene. It combines both hard and soft fitness.
  */
 enum e_FitnessMeta { fit_mGeneID, fit_mHard, fit_mSoft, fit_mGeneTotal, FIT_SECT_L };
-#define FitnessRow	boost::array<uint8_t, FIT_SECT_L>
-#define FitnessTable	boost::array< FitnessRow, CHROML>
+#define FitnessRow	std::array<uint8_t, FIT_SECT_L>
+#define FitnessTable	std::vector< FitnessRow >
 
 //countable fitness enumerator. because some soft fitness values are not related to one gene.
 //multiple genes together produces the fitness thus we cannot separate them. again, last element is SIZE
@@ -56,9 +52,15 @@ struct fitness_t {
 	uint8_t fitness[TOT_FIT_N];
 	FitnessTable fitnessBySect;
 	uint16_t soft_fit, hard_fit, total_fit;
+	int size;
+	fitness_t (int size) {
+		this->size = size;
+		fitnessBySect.assign(size, FitnessRow());
+		hard_fit = soft_fit = total_fit = 0;
+	}
 	fitness_t &operator=(const fitness_t &fit) {
 		std::copy(fit.fitness, fit.fitness + TOT_FIT_N, this->fitness);
-		for (int i = 0; i < CHROML; ++i) {
+		for (int i = 0; i < size; ++i) {
 			std::copy(fit.fitnessBySect[i].begin(), fit.fitnessBySect[i].end(), this->fitnessBySect[i].begin());
 		}
 		this->total_fit = fit.total_fit;
@@ -78,5 +80,20 @@ struct labSession_t {
 	int idx;
 	labSession_t (std::string c, int id) : course_name(c), idx(id) {}
 };
+
+//parameters.xml node names;
+#define PARAM_DUR "Duration"
+#define PARAM_HCSIZE  "HCSize"
+#define PARAM_HCRATE  "HCRate"
+#define PARAM_MUTRATE "MutationRate"
+#define PARAM_CRRATE  "CrossoverRate"
+#define PARAM_RNDRATE "RandomInsertRate"
+#define PARAM_CROWDINGDIST	"CrowdingDistance"
+#define PARAM_HCGENECOUNT "HCGeneCount"
+#define PARAM_POPULATION	"Population"
+#define PARAM_PARETO	"ParetoFront"
+#define PARAM_SELECTIONPOOLSIZE	"SelectionPoolSize"
+#define PARAM_SELECTIONCANDIDATESIZE  "SelectionCandidatePoolSize"
+#define PARAM_GROUPS  "Groups"
 
 #endif /* CONSTANTS_H_ */

@@ -21,6 +21,7 @@ public:
 	int lecturerID;
 	int semid;
 	int hours;
+	int section;
 	int has_constraint, c2day, c2slot;
 	bool isLab;
 };

@@ -11,9 +11,9 @@
 
 namespace std {
 
+//singleton pattern
 bool Common::instanceFlag = false;
 Common * Common::conf = NULL;
-list<int> Common::chrom;
 
 Common* Common::getConf() {
 	if (!instanceFlag) {
@@ -26,9 +26,6 @@ Common* Common::getConf() {
 	}
 }
 
-const list<int>& Common::getChrom() {
-	return Common::chrom;
-}
 /*
  * adds a lecturer if not in list, otherwise update it with new course.
  */
@@ -71,10 +68,10 @@ int Common::add_lecture(string name, int lectid, int idx) {
 }
 
 void Common::initlab(Lecture* lect, int idx) {
-	if (courmat[idx].isLab && courmat[idx].cname[8] == '1' && courmat[idx].hours == 2) {
+	if (courmat[idx].isLab && courmat[idx].section == 1 && courmat[idx].hours == 2) {
 		lect->lab[lect_lab1][lect_idx] = idx;
 	}
-	if (courmat[idx].isLab && courmat[idx].cname[8] == '2' && courmat[idx].hours == 2) {
+	if (courmat[idx].isLab && courmat[idx].section == 2 && courmat[idx].hours == 2) {
 		lect->lab[lect_lab2][lect_idx] = idx;
 	}
 	if (courmat[idx].isLab && courmat[idx].hours == 1) {
@@ -83,28 +80,33 @@ void Common::initlab(Lecture* lect, int idx) {
 }
 
 Common::Common() {
-	mutg1rate = 0.008;
-	mutg3rate = 0.008;
-	mutg5rate = 0.008;
-	dur = 2000;
+	mutrate = 1;
+	duration = 2000;
 	hillsize = 1.00;
-	hillrnd = 0.5;
-	hillboth = 0.6;
+	hcrate = 0.6;
 	crrate = 0.9;
-	insert_popul_rate = 0.001;
+	rnd_insert_rate = 0.001;
 	crowding_dist = 3;
-	hc_max_ind = 10;
-	verbose_level = 4;
-	for (int i = 0; i < CHROML; ++i) {
-		Common::chrom.push_back(i);
-	}
-	fill_n(&labid[0], CHROML, -1);
-	fill_n(&lab[0], CHROML, -1);
-	fill_n(&cse[0], CHROML, -1);
+	hc_gene_count = 10;
+	ChromSize = -1;
+	pop_size = 0;
+	pareto_size = 0;
 }
 
 Common::~Common() {
 	instanceFlag = false;
+	prereq.clear();
+	courmat.clear();
+	courses.clear();
+	lecturers.clear();
+	lectures.clear();
+	labcourses.clear();
+	labid.clear();
+	lab.clear();
+	cse.clear();
+	for (auto it = groups.begin(); it != groups.end(); ++it) {
+	  it->clear();
+	}
 }
 
 /*

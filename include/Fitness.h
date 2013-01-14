@@ -22,7 +22,7 @@ public:
 	void updateFitness(int);
 
 	const inline fitness_t& getFit() const {
-		return fitness;
+		return *fitness;
 	}
 
 	void setChromosome(const Chromosome* chromosome) {
@@ -32,7 +32,7 @@ public:
 private:
 	const Chromosome *chromosome;
 	Common *conf;
-	fitness_t fitness;
+	fitness_t *fitness;
 	bool labs[3];
 
 	inline bool fit_hconfmat(int i,int j);

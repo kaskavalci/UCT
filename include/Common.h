@@ -21,7 +21,6 @@ namespace std {
 class Common {
 public:
 	static Common *getConf();
-	static const list<int>& getChrom();
 	virtual ~Common();
 	int findlabcourse(int idx);
 	int findlecture(int idx);
@@ -29,35 +28,30 @@ public:
 	int add_labsession(labSession_t);
 	int add_lecture(string, int, int);
 
-	int confmat[CHROML][CHROML];
-	int prereq[CHROML][CHROML];
+	vector< vector<int> > prereq;
 
-	Course courmat[CHROML];
+	vector<Course> courmat;
 	vector<string> courses;
 	vector<Lecturer> lecturers;
 	vector<labSession_t> labcourses;
 	vector<Lecture> lectures;
-	int labid[CHROML];
-	int lab[CHROML];
-	int cse[CHROML];
+	vector<int> labid, lab, cse;
 
-	int dur;
-	float hillsize;
-	float hillboth;
-	float hillrnd;
-	float crrate;
-	float mutg1rate;
-	float mutg3rate;
-	float mutg5rate;
-	float insert_popul_rate;
+	int ChromSize;
+	time_t duration;
+	double hillsize;
+	double hcrate;
+	double crrate;
+	double mutrate;
+	double rnd_insert_rate;
 	int crowding_dist;
-	int hc_max_ind;
-	int verbose_level;
-	vector<vector<int> > hardgroup, softgroup;
+	int hc_gene_count;
+	size_t pop_size, sel_poolsize, sel_candidatesize;
+	int pareto_size;
+	vector<vector<int> > groups;
 private:
 	static bool instanceFlag;
 	static Common *conf;
-	static list<int> chrom;
 	void initlab(Lecture*, int);
 	Common();
 

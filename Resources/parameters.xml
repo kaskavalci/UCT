@@ -1,0 +1,37 @@
+<Parameters>
+	<Parameter Name="Duration" Val="1" />
+	<Parameter Name="HCSize" Val="1" />
+	<Parameter Name="HCRate" Val="35" />
+	<Parameter Name="MutationRate" Val="1" />
+	<Parameter Name="CrossoverRate" Val="90" />
+	<Parameter Name="RandomInsertRate" Val="0.1" />
+	<Parameter Name="CrowdingDistance" Val="8" />
+	<Parameter Name="HCGeneCount" Val="4" />
+	<Parameter Name="Population" Val="50" />
+	<Parameter Name="ParetoFront" Val="20" />
+	<Parameter Name="Groups">
+		<Group Type="Hard">
+			<Constraint Name="Course Conflict" ID='0' />
+			<Constraint Name="Same Day" ID='1' />
+		</Group>
+		<Group Type="Hard">
+			<Constraint Name="Mid Day" ID='2' />
+		</Group>
+		<Group Type="Soft">
+			<Constraint Name="Department Meeting" ID='3' />
+			<Constraint Name="Hardware Labs" ID='4' />
+			<Constraint Name="Lecturer Consecutive Work" Desc="4 consecutive lectures for one lecturer" ID='5' />
+			<Constraint Name="Lecturer > 4 Work Hours" Desc="4 or more work hours for one lecturer" ID='6' />
+			<Constraint Name="Lecturer No Free Day" ID='7' />
+			<Constraint Name="Lecturer Morning Course" ID='8' />
+			<Constraint Name="LTL Conflict" ID='9' />
+			<Constraint Name="Consecutive Lecture Conflict" ID='10' />
+		</Group>
+		<Group Type="Soft">
+			<Constraint Name="Consecutive Lab Conflict" ID='11' />
+			<Constraint Name="No Lunch Hour" ID='12' />
+			<Constraint Name="Evening Course" ID='13' />
+			<Constraint Name="Morning Lab" ID='14' />
+		</Group>
+	</Parameter>
+</Parameters>

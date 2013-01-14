@@ -21,11 +21,8 @@ namespace std {
 
 bool compare(const FitnessRow& a, const FitnessRow& b) {
 #ifdef SORT_MULTIOBJ
-	int i = 0;
-	int tot_p1 = 0, tot_p2 = 0;
-	bool result = true;
-	vector<vector<int> >::const_iterator group = Common::getConf()->hardgroup.begin(), ite = Common::getConf()->hardgroup.end();
-	do {
+		int tot_p1 = 0, tot_p2 = 0;
+		bool result = true;
 		//iterate all groups that are defined by user.
 		for (; group != ite; ++group) {
 			tot_p1 = tot_p2 = 0;
@@ -37,11 +34,7 @@ bool compare(const FitnessRow& a, const FitnessRow& b) {
 			}
 			result &= tot_p1 > tot_p2;
 		}
-		i++;
-		//for softs now
-		group = Common::getConf()->softgroup.begin();
-		ite = Common::getConf()->softgroup.end();
-	}while (i < 2);
+
 	return result;
 #else
 	switch (HC_whichFit) {
@@ -56,48 +49,40 @@ bool compare(const FitnessRow& a, const FitnessRow& b) {
 }
 
 Individual::Individual(Common *conf) {
-	int i, j;
-
+	int i;
 	this->conf = conf;
-	chrom_length = CHROML;
+	chrom_length = conf->ChromSize;
 	no_periods = 4;
 	chromosome = new Chromosome(chrom_length, NCOL);
 
-	for (i = 0; i < CHROML; i++) {
+	for (i = 0; i < chrom_length; i++) {
 		if (conf->courmat[i].has_constraint == 1) {
 			chromosome->add(i, 4 * conf->courmat[i].c2day + conf->courmat[i].c2slot);
 		} else {
 			chromosome->add(i, RND(NCOL));
 		}
 	}
-	for (i = 0; i < CHROML; i++) {
-		for (j = 0; j < CHROML; j++) {
-			if (conf->courmat[i].has_constraint == 1 && conf->courmat[j].has_constraint == 1
-					&& conf->courmat[i].hours == conf->courmat[j].hours
-					&& conf->courmat[i].c2day == conf->courmat[j].c2day
-					&& conf->courmat[i].c2slot == conf->courmat[j].c2slot) {
-				//assign i's slot to j's.
-				chromosome->update(j, chromosome->get_slot(i));
-			}
-		}
-	}
 	chromosome->updatefitness(0);
+	mutator = new Mutation(chromosome);
 }
 
 Individual::Individual() {
-	chrom_length = CHROML;
+	conf = Common::getConf();
+
+	chrom_length = conf->ChromSize;
 	no_periods = 4;
 	chromosome = new Chromosome(chrom_length, NCOL);
-
-	conf = Common::getConf();
+	mutator = new Mutation(chromosome);
 }
 
 Individual::~Individual() {
 	delete (chromosome);
+	delete mutator;
 }
 
 Individual::Individual(const Individual& source) {
 	this->chromosome = new Chromosome(source.chromosome);
+	this->mutator = new Mutation(this->chromosome);
 	this->chrom_length = source.chrom_length;
 	this->conf = source.conf;
 	this->no_periods = source.no_periods;
@@ -107,49 +92,15 @@ Individual &Individual::operator=(const Individual &source) {
 	if (this->chromosome)
 		delete (this->chromosome);
 	this->chromosome = new Chromosome(source.chromosome);
+	this->mutator = new Mutation(this->chromosome);
 	this->chrom_length = source.chrom_length;
 	this->conf = source.conf;
 	this->no_periods = source.no_periods;
 	return *this;
 }
-//TODO chance hc1 for new fitness class
-/*
- bool Individual::hc1() {
- int rndidx;
- int selcolor;
- Individual hcchild(*this);
- bool finalchange = false;
-
- if (RND(1000) < 1000 * conf->hillrnd) {
- do {
- rndidx = RND(chrom_length);
- } while (conf->courmat[rndidx].has_constraint == 1);
- } else {
- return false;
- //rndidx = conflv[RND(conflv.size())];
- }
-
- for (selcolor = 0; selcolor < NCOL; selcolor++) {
- //mutate the child's gene rndidx for every color except for its own
- if (hcchild.chromosome->get_slot(rndidx) == selcolor)
- continue;
- hcchild.chromosome->update(rndidx, selcolor);
- hcchild.buildtimetable();
- hcchild.updatefitness();
-
- if ((hcchild.fitnessh + hcchild.fitnessh1 < this->fitnessh + this->fitnessh1)
- && (hcchild.fitnessf + hcchild.fitnessf2 < this->fitnessf + this->fitnessf2)) {
- *this = hcchild;
- return true;
- }
- }
- //conflv.clear();
- return finalchange;
- }
- */
 
 void Individual::cross(const Individual& p1, const Individual &p2) {
-	bool checked[CHROML] = { };
+	vector <bool> checked(chrom_length, false);
 	list<int> *src_list, *candidate_list1, *candidate_list2;
 	for (int i = 0; i < NCOL; ++i) {
 		candidate_list1 = p1.chromosome->get_section_list(i);
@@ -169,7 +120,7 @@ void Individual::cross(const Individual& p1, const Individual &p2) {
 	}
 	Chromosome *chrom;
 	//we copied the largest sets from p1 and p2. but there might have chromosomes haven't copied yet. Randomly inherit from parents.
-	for (int i = 0; i < CHROML; ++i) {
+	for (int i = 0; i < chrom_length; ++i) {
 		if (checked[i] == false) {
 			switch (RND(2)) {
 			case 0:
@@ -197,37 +148,27 @@ void Individual::cross(const Individual& p1, const Individual &p2) {
  * 			return D_NO_DOMINATION if there is no domination.
  */
 domination_t Individual::dominates(const Individual *target) {
-	enum {
-		soft, hard
-	};
-	int i = 0;
 	domination_t result;
 	bool target_dominates = true, this_dominates = true;
 	int tot_this, tot_targ;
 	uint8_t pos = 0, fitsource, fittarget;
 	//first hard groups
-	vector<vector<int> >::const_iterator group = conf->hardgroup.begin(), ite = conf->hardgroup.end();
-	do {
-		//iterate all groups that are defined by user.
-		for (; group != ite; ++group, ++pos) {
-			tot_this = tot_targ = 0;
-			//at each group, iterate fitness values and add them
-			for (vector<int>::const_iterator el = group->begin(); el != group->end(); el++) {
-				fitsource = this->getFit().fitness[*el];
-				fittarget = target->getFit().fitness[*el];
-				//target - source, higher values in result indicates more dominance
-				result.fit[pos] = fittarget - fitsource;
-				tot_this += fitsource;
-				tot_targ += fittarget;
-			}
-			this_dominates &= (tot_this < tot_targ);
-			target_dominates &= (tot_targ <= tot_this);
+
+	//iterate all groups that are defined by user.
+	for (auto group = conf->groups.begin(); group != conf->groups.end(); ++group, ++pos) {
+		tot_this = tot_targ = 0;
+		//at each group, iterate fitness values and add them
+		for (vector<int>::const_iterator el = group->begin(); el != group->end(); el++) {
+			fitsource = this->getFit().fitness[*el];
+			fittarget = target->getFit().fitness[*el];
+			//target - source, higher values in result indicates more dominance
+			result.fit[pos] = fittarget - fitsource;
+			tot_this += fitsource;
+			tot_targ += fittarget;
 		}
-		i++;
-		//for softs now
-		group = conf->softgroup.begin();
-		ite = conf->softgroup.end();
-	} while (i < 2);
+		this_dominates &= (tot_this < tot_targ);
+		target_dominates &= (tot_targ <= tot_this);
+	}
 	//target is dominated by this, in soft and hard constraints
 	if (this_dominates) {
 		result.type = D_TRUE;
@@ -248,7 +189,7 @@ void Individual::printlect() {
 			for (n = 0; n < 10; n++)
 				lectmatrix[m][n] = 0;
 		}
-		for (m = 0; m < CHROML; m++) {
+		for (m = 0; m < chrom_length; m++) {
 			if (conf->lecturers[h].name == conf->courmat[m].lname) {
 				if (conf->courmat[m].hours == 1) {
 					switch (chromosome->get_period(m)) {
@@ -300,12 +241,17 @@ void Individual::printlect() {
 		printf("\n");
 	}
 }
+
+bool Individual::mutate_all() {
+	return mutator->mutate_all();
+}
+
 /*
  void Individual::printdekanlik() {
  size_t i;
  string sched2, sched1;
  int lidx;
- for (i = 0; i < CHROML; i++) {
+ for (i = 0; i < chrom_length; i++) {
  lidx = conf->findlecture(i);
  if (lidx != -1) {
  if (conf->courmat[i].cname.at(7) == '0' && conf->courmat[i].hours == 1
@@ -611,7 +557,7 @@ void inline Individual::calcFit(fitness_t & fit, int print, int type) {
 }
 
 int Individual::findcourse(int sem, int dy, int slt) {
-	size_t h;
+	int h;
 	int found, rslot1, rslot2;
 	switch (slt) {
 	case 0:
@@ -660,7 +606,7 @@ int Individual::findcourse(int sem, int dy, int slt) {
 		break;
 	}
 	found = 0;
-	for (h = 0; h < CHROML; h++) {
+	for (h = 0; h < chrom_length; h++) {
 		if (conf->courmat[h].semid == sem && chromosome->get_day(h) == dy && conf->courmat[h].hours == 2
 				&& chromosome->get_slot(h) == rslot2) {
 			found = 1;
@@ -701,32 +647,30 @@ void Individual::updatefitness(int val) {
 	chromosome->fit->updateFitness(val);
 }
 
-bool Individual::hc_worstsection(int level) {
-	//todo: copying this might be unnecessary
-	Individual subject(*this);
-	fitness_t oldFit, newFit;
+bool Individual::hc_worstsection() {
+	fitness_t oldFit(chrom_length), newFit(chrom_length);
 	bool finalchange = false;
-	int oldSlot, oldFitSpec, newFitSpec;
+	int oldSlot, oldFitSpec, newFitSpec, oldHardFit;
 
 	//get fitnesses first
 	oldFit = getFit();
+	oldHardFit = getFit().hard_fit;
 	switch (HC_whichFit) {
-		case hc_hard:
-			oldFitSpec = oldFit.hard_fit;
-			break;
-		case hc_soft:
-			oldFitSpec = oldFit.soft_fit;
-			break;
-		default:
-			oldFitSpec = oldFit.total_fit;
-			break;
+	case hc_hard:
+		oldFitSpec = oldFit.hard_fit;
+		break;
+	case hc_soft:
+		oldFitSpec = oldFit.soft_fit;
+		break;
+	default:
+		oldFitSpec = oldFit.total_fit;
+		break;
 	}
 
 	//sort the list to find worst gene in it.
 	sort(oldFit.fitnessBySect.begin(), oldFit.fitnessBySect.end(), compare);
 	auto it = oldFit.fitnessBySect.begin(), ite = oldFit.fitnessBySect.end();
-
-	for (int i = 0; i < conf->hc_max_ind && it != ite; ++i, ++it) {
+	for (int i = 0; i < conf->hc_gene_count && it != ite; ++i, ++it) {
 		if (it->at(fit_mGeneTotal) == 0) {
 			//yay! perfect individual. no need for hill climbing!
 			return false;
@@ -737,42 +681,63 @@ bool Individual::hc_worstsection(int level) {
 		}
 		//restore old slot of gene, to reduce function calls.
 		oldSlot = chromosome->get_slot(it->at(fit_mGeneID));
-		int maxdiff = 0,  bestSectionID = -1;
+		int maxdiff = 0, bestSectionID = -1;
 		for (int selcolor = 0; selcolor < NCOL; selcolor++) {
 			//mutate the child's gene in the longest_slot list for every color except for its own
 			if (selcolor == oldSlot) {
 				continue;
 			}
 			//update the gene to selcolor
-			subject.chromosome->update(it->at(fit_mGeneID), selcolor);
+			chromosome->update(it->at(fit_mGeneID), selcolor);
 			//find out new fitness value for that
-			subject.calcFit(newFit, 0, HC_whichFit);
+			calcFit(newFit, 0, HC_whichFit);
 			switch (HC_whichFit) {
-				case hc_hard:
-					newFitSpec = newFit.hard_fit;
-					break;
-				case hc_soft:
-					newFitSpec = newFit.soft_fit;
-					break;
-				default:
-					newFitSpec = newFit.total_fit;
-					break;
+			case hc_hard:
+				newFitSpec = newFit.hard_fit;
+				break;
+			case hc_soft:
+				newFitSpec = newFit.soft_fit;
+				break;
+			default:
+				newFitSpec = newFit.total_fit;
+				break;
 			}
 			//compare the enhancements, if there any. we need to check total_fit for that since
 			//reducing particular gene's or groups fitness might increase the overall fitness.
-			if ((oldFit.hard_fit >= newFit.hard_fit) &&(oldFitSpec - newFitSpec) > maxdiff) {
+			if ((oldHardFit >= newFit.hard_fit) && (oldFitSpec - newFitSpec) > maxdiff) {
 				maxdiff = oldFitSpec - newFitSpec;
 				bestSectionID = selcolor;
 			}
-			//un-stage changes
-			subject.chromosome->update(it->at(fit_mGeneID), oldSlot);
 		}
+		//un-stage changes
+		chromosome->update(it->at(fit_mGeneID), oldSlot);
 
 		//if difference is larger than 0, then we found a better slot for that section.
 		if (maxdiff > 0 && bestSectionID != -1) {
+			int old = getFit().hard_fit;
 			chromosome->update(it->at(fit_mGeneID), bestSectionID);
 			updatefitness(0);
+			//todo: debugý sil
+			if (old < getFit().hard_fit) {
+				cerr << "HC fails. old:" << old << "pre-calc old:" << oldHardFit << "new:" << getFit().hard_fit << endl;
+			}
+			//update new fitness for internal use
+			oldHardFit = getFit().hard_fit;
+			switch (HC_whichFit) {
+			case hc_hard:
+				oldFitSpec = getFit().hard_fit;
+				break;
+			case hc_soft:
+				oldFitSpec = getFit().soft_fit;
+				break;
+			default:
+				oldFitSpec = getFit().total_fit;
+				break;
+			}
 			finalchange = true;
+		} else {
+			//because we calculated fitness with changed slots. let's restore old fitness back.
+			updatefitness(0);
 		}
 		//todo: updatefitness'ý deðiþtir. modüler fitness tut, herþeyi baþtan hesaplama.
 	}

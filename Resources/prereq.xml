@@ -1,0 +1,67 @@
+<Courses>
+<!-- 112 is depreciated -->
+ <Course Course1="cse112" Course2="cse101"/>
+ <Course Course1="cse211" Course2="cse112"/>
+<!-- 112 is depreciated -->
+
+ <Course Course1="cse114" Course2="cse101"/>
+ 
+ <Course Course1="cse211" Course2="cse114"/>
+ <Course Course1="cse212" Course2="cse114"/>
+ <Course Course1="cse232" Course2="cse114"/>
+ <Course Course1="cse252" Course2="cse114"/>
+ 
+ <Course Course1="cse311" Course2="cse211"/>
+ <Course Course1="cse321" Course2="cse211"/>
+ 
+ <Course Course1="cse323" Course2="cse211"/>
+ <Course Course1="cse323" Course2="cse232"/>
+ 
+ <Course Course1="cse331" Course2="cse211"/>
+ <Course Course1="cse331" Course2="cse232"/>
+ 
+ <Course Course1="cse343" Course2="cse211"/>
+ <Course Course1="cse344" Course2="cse211"/>
+ 
+ <Course Course1="cse354" Course2="mat154"/>
+ 
+ <Course Course1="cse421" Course2="cse323"/>
+ <Course Course1="cse471" Course2="cse331"/>
+ 
+ <Course Course1="cse336" Course2="cse331"/>
+ <Course Course1="cse348" Course2="cse343"/>
+ <Course Course1="cse349" Course2="cse252"/>
+ <Course Course1="cse401" Course2="cse484"/>
+ <Course Course1="cse402" Course2="cse471"/>
+ 
+ <Course Course1="cse418" Course2="mat154"/>
+ 
+ <Course Course1="cse425" Course2="cse221"/>
+ <Course Course1="cse426" Course2="ees224"/>
+ <Course Course1="cse427" Course2="cse323"/>
+ <Course Course1="cse428" Course2="cse323"/>
+ <Course Course1="cse429" Course2="cse221"/>
+ 
+ <Course Course1="cse442" Course2="cse344"/>
+ <Course Course1="cse446" Course2="cse344"/>
+ <Course Course1="cse449" Course2="cse343"/>
+ <Course Course1="cse457" Course2="cse354"/>
+ 
+ <Course Course1="cse476" Course2="cse319"/>
+ <Course Course1="cse477" Course2="ees231"/>
+ <Course Course1="cse477" Course2="mat154"/>
+ 
+ <Course Course1="cse479" Course2="cse471"/>
+ 
+ <Course Course1="cse482" Course2="ees231"/>
+ <Course Course1="cse485" Course2="ees231"/>
+ <Course Course1="cse486" Course2="mat221"/>
+ 
+ <Course Course1="phy102" Course2="phy101"/>
+ <Course Course1="mat152" Course2="mat151"/>
+ <Course Course1="mat221" Course2="mat151"/>
+ <Course Course1="mat241" Course2="mat152"/>
+ 
+ <Course Course1="ees272" Course2="mat152"/>
+ 
+</Courses>

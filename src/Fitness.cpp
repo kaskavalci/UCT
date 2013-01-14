@@ -28,13 +28,15 @@ namespace std {
 Fitness::Fitness(const Chromosome *chrom) {
 	this->chromosome = chrom;
 	conf = Common::getConf();
-	fill(fitness.fitness, fitness.fitness + TOT_FIT_N, 0);
+	fitness = new fitness_t(conf->ChromSize);
+	fill(fitness->fitness, fitness->fitness + TOT_FIT_N, 0);
 }
 
 Fitness::Fitness(const Fitness* source) {
 	conf = Common::getConf();
+	fitness = new fitness_t(conf->ChromSize);
 	chromosome = NULL;
-	fitness = source->fitness;
+	*fitness = *source->fitness;
 }
 /**
  * Calculates hard and soft fitness value. Warning: Large overhead.
@@ -45,7 +47,7 @@ void Fitness::calcFit(int print, fitness_t& fit, int type) {
 	fit.hard_fit = 0;
 	fit.soft_fit = 0;
 	//init chrom IDs in fitnessBySect struct. it is to be used while sorting
-	for (int i = 0; i < CHROML; ++i) {
+	for (int i = 0; i < conf->ChromSize; ++i) {
 		fit.fitnessBySect[i].fill(0);
 		fit.fitnessBySect[i][fit_mGeneID] = i;
 	}
@@ -74,6 +76,7 @@ void Fitness::calcFit(int print, fitness_t& fit, int type) {
 
 void Fitness::init_labs(vector<Lecture>::const_iterator it1, vector<Lecture>::const_iterator it2) {
 	fill_n(&labs[0], 3, false);
+
 	if (it1->lab[lect_lab1][lect_labday] == it2->cid1day
 			&& (it1->lab[lect_lab1][lect_labslot] == 1 && (it2->cid1slot == 0 || it2->cid1slot == 1)))
 		labs[0] = true;
@@ -89,6 +92,7 @@ void Fitness::init_labs(vector<Lecture>::const_iterator it1, vector<Lecture>::co
 	if (it1->lab[lect_lab1][lect_labday] == it2->lab[lect_lab2][lect_labday]
 			&& it1->lab[lect_lab1][lect_labslot] == it2->lab[lect_lab2][lect_labslot])
 		labs[0] = true;
+
 	if (it1->lab[lect_lab2][lect_labday] == it2->cid1day
 			&& (it1->lab[lect_lab2][lect_labslot] == 1 && (it2->cid1slot == 0 || it2->cid1slot == 1)))
 		labs[1] = true;
@@ -104,6 +108,7 @@ void Fitness::init_labs(vector<Lecture>::const_iterator it1, vector<Lecture>::co
 	if (it1->lab[lect_lab2][lect_labday] == it2->lab[lect_lab2][lect_labday]
 			&& it1->lab[lect_lab2][lect_labslot] == it2->lab[lect_lab2][lect_labslot])
 		labs[1] = true;
+
 	if (it1->lab[lect_lab3][lect_labday] == it2->lab[lect_lab1][lect_labday]
 			&& (it2->lab[lect_lab1][lect_labslot] == 1
 					&& (it1->lab[lect_lab3][lect_labslot] == 0 || it1->lab[lect_lab3][lect_labslot] == 1)))
@@ -123,16 +128,17 @@ void Fitness::init_labs(vector<Lecture>::const_iterator it1, vector<Lecture>::co
 }
 
 inline bool Fitness::fit_hconfmat(int i, int j) {
-	return conf->courmat[i].semid == conf->courmat[j].semid
+	return (conf->courmat[i].semid == conf->courmat[j].semid || (conf->courmat[i].lecturerID == conf->courmat[j].lecturerID))
 			&& ((chromosome->get_slot(i) == chromosome->get_slot(j) && conf->courmat[i].hours == conf->courmat[j].hours)
 					|| (conf->courmat[i].hours != conf->courmat[j].hours
 							&& chromosome->get_day(i) == chromosome->get_day(j)
-							&& ((conf->courmat[i].hours == 1 && conf->courmat[j].hours == 2
-									&& (chromosome->get_slot(i) == 0 || chromosome->get_slot(i) == 1)
-									&& chromosome->get_slot(j) == 1)
+							&& ((chromosome->get_period(i) == 3 && chromosome->get_period(j) == 3)
+									|| (conf->courmat[i].hours == 1 && conf->courmat[j].hours == 2
+											&& (chromosome->get_period(i) == 0 || chromosome->get_period(i) == 1)
+											&& chromosome->get_period(j) == 1)
 									|| (conf->courmat[i].hours == 2 && conf->courmat[j].hours == 1
-											&& (chromosome->get_slot(j) == 0 || chromosome->get_slot(j) == 1)
-											&& chromosome->get_slot(i) == 1))));
+											&& (chromosome->get_period(j) == 0 || chromosome->get_period(j) == 1)
+											&& chromosome->get_period(i) == 1))));
 }
 /*
  * TODO: ability to add special constraints. as in here, substr.
@@ -140,31 +146,28 @@ inline bool Fitness::fit_hconfmat(int i, int j) {
  * if we check uniqueIDs we also check if the course is given by the same lecturer.
  */
 inline bool Fitness::fit_hsameday(int i, int j) {
-	return chromosome->get_day(i) == chromosome->get_day(j) && conf->courmat[i].uniqueID == conf->courmat[j].uniqueID
-			&& conf->courmat[i].cname.substr(0, 8) != "cse211.L" && conf->courmat[i].cname.substr(0, 8) != "cse112.L";
+	return chromosome->get_day(i) == chromosome->get_day(j) && conf->courmat[i].uniqueID == conf->courmat[j].uniqueID;
 }
 
 inline bool Fitness::fit_hmidday(int i, int j) {
 	return conf->courmat[i].semid == conf->courmat[j].semid && chromosome->get_day(i) == chromosome->get_day(j)
 			&& ((conf->courmat[i].hours == 1 && conf->courmat[j].hours == 2
-					&& (chromosome->get_slot(i) == 0 || chromosome->get_slot(i) == 1) && chromosome->get_slot(j) == 1)
+					&& (chromosome->get_period(i) == 0 || chromosome->get_period(i) == 1)
+					&& chromosome->get_period(j) == 1)
 					|| ((conf->courmat[i].hours == 2 && conf->courmat[j].hours == 1
-							&& ((chromosome->get_slot(j) == 0 || chromosome->get_slot(j) == 1)
-									&& chromosome->get_slot(i) == 1))));
+							&& ((chromosome->get_period(j) == 0 || chromosome->get_period(j) == 1)
+									&& chromosome->get_period(i) == 1))));
 }
 
+//todo: dep meet saatlerini öðren
 inline bool Fitness::fit_sdepmeet(int i) {
-	return ((conf->cse[i] == 1 && chromosome->get_day(i) == 3 && (chromosome->get_slot(i) == 2)
-			&& conf->courmat[i].hours == 2)
-			|| (conf->cse[i] == 1 && chromosome->get_day(i) == 3 && (chromosome->get_slot(i) == 2)
-					&& conf->courmat[i].hours == 1)) && conf->courmat[i].cname.substr(0, 8) != "cse211.L"
-			&& conf->courmat[i].cname.substr(0, 8) != "cse112.L";
+	return conf->cse[i] == 1 && chromosome->get_day(i) == 3 && chromosome->get_period(i) == 1;
 }
 
 inline bool Fitness::fit_sconssem1(int i, int j) {
 	return conf->prereq[i][j] == 0 && i != j && conf->courmat[i].semid == conf->courmat[j].semid + 1
 			&& conf->courmat[i].hours == conf->courmat[j].hours && chromosome->get_day(i) == chromosome->get_day(j)
-			&& chromosome->get_slot(i) == chromosome->get_slot(j) && conf->cse[i] == 1 && conf->cse[j] == 1
+			&& chromosome->get_period(i) == chromosome->get_period(j) && conf->cse[i] == 1 && conf->cse[j] == 1
 			&& conf->lab[i] != 1 && conf->lab[j] != 1;
 }
 
@@ -172,7 +175,7 @@ inline bool Fitness::fit_sconssem2(int i, int j) {
 	return conf->prereq[i][j] == 0 && i != j && conf->courmat[i].semid == conf->courmat[j].semid + 1
 			&& conf->courmat[i].hours == 1 && conf->courmat[j].hours == 2
 			&& chromosome->get_day(i) == chromosome->get_day(j)
-			&& (chromosome->get_slot(i) == 0 || chromosome->get_slot(i) == 1) && chromosome->get_slot(j) == 1
+			&& (chromosome->get_period(i) == 0 || chromosome->get_period(i) == 1) && chromosome->get_period(j) == 1
 			&& conf->cse[i] == 1 && conf->cse[j] == 1;
 }
 
@@ -180,7 +183,7 @@ inline bool Fitness::fit_sconssem3(int i, int j) {
 	return conf->prereq[i][j] == 0 && i != j && conf->courmat[i].semid == conf->courmat[j].semid + 1
 			&& conf->courmat[i].hours == 2 && conf->courmat[j].hours == 1
 			&& chromosome->get_day(i) == chromosome->get_day(j)
-			&& (chromosome->get_slot(j) == 0 || chromosome->get_slot(j) == 1) && chromosome->get_slot(i) == 1
+			&& (chromosome->get_period(j) == 0 || chromosome->get_period(j) == 1) && chromosome->get_period(i) == 1
 			&& conf->cse[i] == 1 && conf->cse[j] == 1;
 }
 
@@ -214,21 +217,22 @@ inline bool Fitness::fit_signoredlunchconflict(int semester, int day) {
 
 inline bool Fitness::fit_slabconf(int i, int j) {
 	return (conf->lab[i] == 1 && conf->lab[j] == 1)
-			&& (((conf->courmat[i].cname.substr(0, 6) == "cse221" || conf->courmat[i].cname.substr(0, 6) == "cse421"
-					|| conf->courmat[i].cname.substr(0, 6) == "cse232")
-					&& (conf->courmat[j].cname.substr(0, 6) == "cse221"
-							|| conf->courmat[j].cname.substr(0, 6) == "cse421"
-							|| conf->courmat[j].cname.substr(0, 6) == "cse232"))
+			&& (((conf->courmat[i].cname == "cse221" || conf->courmat[i].cname == "cse421"
+					|| conf->courmat[i].cname == "cse232")
+					&& (conf->courmat[j].cname == "cse221" || conf->courmat[j].cname == "cse421"
+							|| conf->courmat[j].cname == "cse232"))
 					&& (chromosome->get_day(i) == chromosome->get_day(j)
-							&& chromosome->get_slot(i) == chromosome->get_slot(j)));
+							&& chromosome->get_period(i) == chromosome->get_period(j)));
 }
 
 inline void Fitness::h_confmat(fitness_t& fit, int print) {
-	int j;
-	for (int i = 0; i < CHROML; ++i) {
-		for (j = i + 1; j < CHROML; ++j) {
+	int j, idx;
+	for (int i = 0; i < conf->ChromSize; ++i) {
+		for (j = i + 1; j < conf->ChromSize; ++j) {
 			if (fit_hconfmat(i, j)) {
-				INC_HARD(i, fit_hConfmat)
+				//if i has constraints, pass the fitness to j. they both cannot have constraints.
+				idx = conf->courmat[i].has_constraint ? j : i;
+				INC_HARD(idx, fit_hConfmat)
 				if (print == 1) {
 					cout << "Hard 1 Confmat " << conf->courmat[i].cname << " " << conf->courmat[j].cname << endl;
 				}
@@ -238,11 +242,12 @@ inline void Fitness::h_confmat(fitness_t& fit, int print) {
 }
 
 inline void Fitness::h_sameday(fitness_t& fit, int print) {
-	int j;
-	for (int i = 0; i < CHROML; ++i) {
-		for (j = i + 1; j < CHROML; ++j) {
+	int j, idx;
+	for (int i = 0; i < conf->ChromSize; ++i) {
+		for (j = i + 1; j < conf->ChromSize; ++j) {
 			if (fit_hsameday(i, j)) {
-				INC_HARD(i, fit_hSameDay)
+				idx = conf->courmat[i].has_constraint ? j : i;
+				INC_HARD(idx, fit_hSameDay)
 				if (print == 1) {
 					cout << "Hard 2 Same Day " << conf->courmat[i].cname << " " << conf->courmat[j].cname << endl;
 				}
@@ -252,11 +257,12 @@ inline void Fitness::h_sameday(fitness_t& fit, int print) {
 }
 
 inline void Fitness::h_midday(fitness_t& fit, int print) {
-	int j;
-	for (int i = 0; i < CHROML; ++i) {
-		for (j = i + 1; j < CHROML; ++j) {
+	int j, idx;
+	for (int i = 0; i < conf->ChromSize; ++i) {
+		for (j = i + 1; j < conf->ChromSize; ++j) {
 			if (fit_hmidday(i, j)) {
-				INC_HARD(i, fit_hMidHour)
+				idx = conf->courmat[i].has_constraint ? j : i;
+				INC_HARD(idx, fit_hMidHour)
 				if (print == 1) {
 					cout << "Hard 3 Hours 11-13 " << conf->courmat[i].cname << " " << conf->courmat[j].cname << endl;
 				}
@@ -266,7 +272,7 @@ inline void Fitness::h_midday(fitness_t& fit, int print) {
 }
 
 inline void Fitness::s_depmet(fitness_t& fit, int print) {
-	for (int i = 0; i < CHROML; ++i) {
+	for (int i = 0; i < conf->ChromSize; ++i) {
 		if (fit_sdepmeet(i)) {
 			INC_SOFT(i, fit_sDepMeeting)
 			if (print == 1) {
@@ -278,8 +284,8 @@ inline void Fitness::s_depmet(fitness_t& fit, int print) {
 
 inline void Fitness::s_hwlab(fitness_t& fit, int print) {
 	int i, j;
-	for (i = 0; i < CHROML; ++i) {
-		for (j = i + 1; j < CHROML; ++j) {
+	for (i = 0; i < conf->ChromSize; ++i) {
+		for (j = i + 1; j < conf->ChromSize; ++j) {
 			if (fit_slabconf(i, j)) {
 				INC_SOFT(i, fit_shardlab)
 				if (print == 1) {
@@ -301,9 +307,6 @@ inline void Fitness::s_lecturer(fitness_t& fit, int print) {
 		//iterate all courses that Lecturer has
 		for (vector<int>::iterator idx = conf->lecturers[h].myCourses.begin();
 				idx != conf->lecturers[h].myCourses.end(); ++idx) {
-			if (conf->lecturers[h].myCourses.size() > 1) {
-				cout << "";
-			}
 			if (conf->courmat[*idx].hours == 1) {
 				switch (chromosome->get_period(*idx)) {
 				case 0:
@@ -405,19 +408,19 @@ inline void Fitness::s_LTLconflict(fitness_t& fit, int print) {
 	vector<int> lab1(conf->labcourses.size(), -1);
 	vector<int> lab2(conf->labcourses.size(), -1);
 	int decv = -1;
-	for (int i = 0; i < CHROML; i++) {
+	for (int i = 0; i < conf->ChromSize; i++) {
 		if (conf->labid[i] != -1) {
 			decv = decode(i);
 			if (conf->labid[i] > (int) conf->labcourses.size()) {
 				cerr << "SEGFAULT";
 			}
-			if (decv > cmax[conf->labid[i]] && conf->courmat[i].cname.size() > 8 && conf->lab[i] == 0)
+			if (decv > cmax[conf->labid[i]] && conf->lab[i] == 0)
 				cmax[conf->labid[i]] = decv;
-			if (decv < cmin[conf->labid[i]] && conf->courmat[i].cname.size() > 8 && conf->lab[i] == 0)
+			if (decv < cmin[conf->labid[i]] && conf->lab[i] == 0)
 				cmin[conf->labid[i]] = decv;
-			if (lab1[conf->labid[i]] == -1 && conf->courmat[i].cname.size() > 8 && conf->lab[i] == 1)
+			if (lab1[conf->labid[i]] == -1 && conf->lab[i] == 1)
 				lab1[conf->labid[i]] = decv;
-			if (lab1[conf->labid[i]] != -1 && conf->courmat[i].cname.size() > 8 && conf->lab[i] == 1)
+			if (lab1[conf->labid[i]] != -1 && conf->lab[i] == 1)
 				lab2[conf->labid[i]] = decv;
 		}
 	}
@@ -449,8 +452,10 @@ inline void Fitness::s_LTLconflict(fitness_t& fit, int print) {
  */
 inline void Fitness::s_ConsecSem(fitness_t& fit, int print) {
 	int i, j;
-	for (i = 0; i < CHROML; i++) {
-		for (j = 0; j < CHROML; ++j) {
+	for (i = 0; i < conf->ChromSize; i++) {
+		if (conf->cse[i] != 1) continue;
+		for (j = 0; j < conf->ChromSize; ++j) {
+			if (conf->cse[j] != 1) continue;
 			if (fit_sconssem1(i, j)) {
 				INC_SOFT(i, fit_sConsecSemester)
 				if (print == 1) {
@@ -479,11 +484,11 @@ inline void Fitness::s_ConsecSem(fitness_t& fit, int print) {
 inline void Fitness::s_lunch(fitness_t& fit, int print) {
 	short int lunch[8][5][3];
 	fill_n(&lunch[0][0][0], 8 * 5 * 3, -1);
-	for (int i = 0; i < CHROML; i++) {
+	for (int i = 0; i < conf->ChromSize; i++) {
 		//only if it's 1 hour course and in the first 3rd slot
-		if (conf->courmat[i].hours == 1 && chromosome->get_slot(i) > 0 && chromosome->get_slot(i) < 3) {
-			lunch[conf->courmat[i].semid - 1][chromosome->get_day(i)][chromosome->get_slot(i)] = i;
-		} else if (conf->courmat[i].hours == 2 && chromosome->get_slot(i) == 1) {
+		if (conf->courmat[i].hours == 1 && chromosome->get_period(i) > 0 && chromosome->get_period(i) < 3) {
+			lunch[conf->courmat[i].semid - 1][chromosome->get_day(i)][chromosome->get_period(i)] = i;
+		} else if (conf->courmat[i].hours == 2 && chromosome->get_period(i) == 1) {
 			lunch[conf->courmat[i].semid - 1][chromosome->get_day(i)][0] = i;
 			lunch[conf->courmat[i].semid - 1][chromosome->get_day(i)][1] = i;
 		}
@@ -503,8 +508,8 @@ inline void Fitness::s_lunch(fitness_t& fit, int print) {
 }
 
 inline void Fitness::s_eveningLecture(fitness_t& fit, int print) {
-	for (int i = 0; i < CHROML; i++) {
-		if (conf->courmat[i].hours == 1 && chromosome->get_slot(i) == 3) {
+	for (int i = 0; i < conf->ChromSize; i++) {
+		if (conf->courmat[i].hours == 1 && chromosome->get_period(i) == 3 && conf->cse[i] == 1) {
 			INC_SOFT(i, fit_sEveningLecture)
 			if (print == 1) {
 				cout << "Soft 5 Evening Lecture " << conf->courmat[i].cname << endl;
@@ -514,9 +519,8 @@ inline void Fitness::s_eveningLecture(fitness_t& fit, int print) {
 }
 
 inline void Fitness::s_morningLab(fitness_t& fit, int print) {
-	for (int i = 0; i < CHROML; i++) {
-		if (conf->courmat[i].cname.size() > 8 && conf->lab[i] == 1 && chromosome->get_slot(i) == 0
-				&& conf->courmat[i].hours == 2) {
+	for (int i = 0; i < conf->ChromSize; i++) {
+		if (conf->lab[i] == 1 && chromosome->get_period(i) == 0 && conf->courmat[i].hours == 2) {
 			INC_SOFT(i, fit_sMorningLab)
 			if (print == 1) {
 				cout << "Soft 6 Mourning Lab " << conf->courmat[i].cname << endl;
@@ -531,23 +535,23 @@ inline void Fitness::s_ConsecSemLab(fitness_t& fit, int print) {
 		for (set<int>::iterator it = conf->lectures[h].courses.begin(); it != conf->lectures[h].courses.end(); ++it) {
 			if (!conf->courmat[*it].isLab && conf->courmat[*it].hours == 1) {
 				conf->lectures[h].cid1day = chromosome->get_day(*it);
-				conf->lectures[h].cid1slot = chromosome->get_slot(*it);
+				conf->lectures[h].cid1slot = chromosome->get_period(*it);
 			}
 			if (!conf->courmat[*it].isLab && conf->courmat[*it].hours == 2) {
 				conf->lectures[h].cid2day = chromosome->get_day(*it);
-				conf->lectures[h].cid2slot = chromosome->get_slot(*it);
+				conf->lectures[h].cid2slot = chromosome->get_period(*it);
 			}
-			if (conf->courmat[*it].isLab && conf->courmat[*it].cname.at(8) == '1' && conf->courmat[*it].hours == 2) {
+			if (conf->courmat[*it].isLab && conf->courmat[*it].section == 1 && conf->courmat[*it].hours == 2) {
 				conf->lectures[h].lab[lect_lab1][lect_labday] = chromosome->get_day(*it);
-				conf->lectures[h].lab[lect_lab1][lect_labslot] = chromosome->get_slot(*it);
+				conf->lectures[h].lab[lect_lab1][lect_labslot] = chromosome->get_period(*it);
 			}
-			if (conf->courmat[*it].isLab && conf->courmat[*it].cname.at(8) == '2' && conf->courmat[*it].hours == 2) {
+			if (conf->courmat[*it].isLab && conf->courmat[*it].section == 2 && conf->courmat[*it].hours == 2) {
 				conf->lectures[h].lab[lect_lab2][lect_labday] = chromosome->get_day(*it);
-				conf->lectures[h].lab[lect_lab2][lect_labslot] = chromosome->get_slot(*it);
+				conf->lectures[h].lab[lect_lab2][lect_labslot] = chromosome->get_period(*it);
 			}
 			if (conf->courmat[*it].isLab && conf->courmat[*it].hours == 1) {
 				conf->lectures[h].lab[lect_lab3][lect_labday] = chromosome->get_day(*it);
-				conf->lectures[h].lab[lect_lab3][lect_labslot] = chromosome->get_slot(*it);
+				conf->lectures[h].lab[lect_lab3][lect_labslot] = chromosome->get_period(*it);
 			}
 		}
 	}
@@ -591,13 +595,13 @@ inline void Fitness::s_ConsecSemLab(fitness_t& fit, int print) {
 }
 
 void Fitness::updateFitness(int print) {
-	calcFit(print, fitness, hc_both);
+	calcFit(print, *fitness, hc_both);
 }
 
 int Fitness::decode(int cidx) {
 	int rslot = -1, rval = -1;
 	if (conf->courmat[cidx].hours == 1) {
-		switch (chromosome->get_slot(cidx)) {
+		switch (chromosome->get_period(cidx)) {
 		case 0:
 			rslot = 2;
 			break;
@@ -612,7 +616,7 @@ int Fitness::decode(int cidx) {
 			break;
 		}
 	} else {
-		switch (chromosome->get_slot(cidx)) {
+		switch (chromosome->get_period(cidx)) {
 		case 0:
 			rslot = 0;
 			break;

@@ -11,9 +11,9 @@
 
 namespace std {
 
-Mutation::Mutation(Common *conf) {
-	this->conf = conf;
-	chromosome = NULL;
+Mutation::Mutation(Chromosome *chrom) {
+	this->conf = Common::getConf();
+	chromosome = chrom;
 }
 
 Mutation::~Mutation() {
@@ -21,10 +21,10 @@ Mutation::~Mutation() {
 }
 
 bool Mutation::mutate() {
-	if (RND(1000000) < 1000000 * conf->mutg5rate)
+	if (RND(1000000) < 10000 * conf->mutrate)
 	{
 		int pos, val;
-		pos = RND(CHROML);
+		pos = RND(conf->ChromSize);
 		val = RND(NCOL);
 		//mutate only if no constraint given on that lecture
 		if (conf->courmat[pos].has_constraint != 1) {
@@ -38,12 +38,12 @@ bool Mutation::mutate() {
 bool Mutation::mutateg1() {
 	int col1, col2, i, k;
 	bool retval = false;
-	for (k = 0; k < chromosome->chrom_length; k++) {
-		if (RND(1000000) >= 1000000 * conf->mutg1rate)
+	for (k = 0; k < conf->ChromSize; k++) {
+		if (RND(1000000) >= 10000 * conf->mutrate)
 			continue;
 		col1 = chromosome->get_slot(k);
 		col2 = RND(chromosome->no_colors);
-		for (i = 0; i < chromosome->chrom_length; i++) {
+		for (i = 0; i < conf->ChromSize; i++) {
 			if (conf->courmat[i].has_constraint == 1) continue;
 			if (chromosome->get_slot(i) == col1) {
 				chromosome->update(i, col2);
@@ -62,17 +62,17 @@ bool Mutation::mutateg3() {
 	int pos1, pos2;
 	int val1, val2;
 	bool retval = false;
-	for (k = 0; k < chromosome->chrom_length; k++) {
-		if (RND(1000000) >= 1000000 * conf->mutg3rate)
+	for (k = 0; k < conf->ChromSize; k++) {
+		if (RND(1000000) >= 10000 * conf->mutrate)
 			continue;
 		pos1 = k;
-		pos2 = RND(chromosome->chrom_length);
+		pos2 = RND(conf->ChromSize);
 		while (pos1 == pos2) {
-			pos2 = RND(POPUL);
+			pos2 = RND(conf->pop_size);
 		}
 		val1 = chromosome->get_slot(pos1);
 		val2 = chromosome->get_slot(pos2);
-		for (i = 0; i < chromosome->chrom_length; i++) {
+		for (i = 0; i < conf->ChromSize; i++) {
 			if (conf->courmat[i].has_constraint == 1) continue;
 			if (chromosome->get_slot(i) == val1 && RND(100) < 50) {
 				chromosome->update(i, val2);
@@ -88,22 +88,22 @@ bool Mutation::mutateg5() {
 	int pos1, pos2, pos3;
 	int val1, val2, val3;
 	bool retval = false;
-	for (k = 0; k < chromosome->chrom_length; k++) {
-		if (RND(1000000) >= 1000000 * conf->mutg5rate)
+	for (k = 0; k < conf->ChromSize; k++) {
+		if (RND(1000000) >= 10000 * conf->mutrate)
 			continue;
 		pos1 = k;
-		pos2 = RND(chromosome->chrom_length);
+		pos2 = RND(conf->ChromSize);
 		while (pos1 == pos2) {
-			pos2 = RND(POPUL);
+			pos2 = RND(conf->pop_size);
 		}
-		pos3 = RND(chromosome->chrom_length);
+		pos3 = RND(conf->ChromSize);
 		while (pos3 == pos2 || pos3 == pos1) {
-			pos3 = RND(POPUL);
+			pos3 = RND(conf->pop_size);
 		}
 		val1 = chromosome->get_slot(pos1);
 		val2 = chromosome->get_slot(pos2);
 		val3 = chromosome->get_slot(pos3);
-		for (i = 0; i < chromosome->chrom_length; i++) {
+		for (i = 0; i < conf->ChromSize; i++) {
 			if (conf->courmat[i].has_constraint == 1) continue;
 			sel = RND(2);
 			if (chromosome->get_slot(i) == val3 && sel == 0 && RND(100) < 50) {
@@ -127,10 +127,6 @@ bool Mutation::mutate_all() {
 	retval |= mutateg3();
 	retval |= mutateg5();
 	return retval;
-}
-
-void Mutation::setChromosome(Chromosome* chromosome) {
-	this->chromosome = chromosome;
 }
 
 } /* namespace std */

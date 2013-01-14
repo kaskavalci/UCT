@@ -17,42 +17,64 @@ namespace std {
 
 class Population {
 public:
-	Population();
+	Population(int seed);
 	virtual ~Population();
 
-	void run(int seed);
-
-private:
-	double getduration();
 	void crossover();
 	void mutation();
+	void hillclimber();
+	void startGA();
+	double getduration();
+	void print_footer(double duration, int iteration);
+
+	const string& getPrinterFname() const {
+		return printer_fname;
+	}
+
+	void setPrinterFname(const string& printerFname) {
+		printer_fname = printerFname;
+	}
+
+	const Individual* getInd(int idx) const {
+		return pop[idx];
+	}
+
+	const vector<Individual*>& getpareto() const;
+
+	const Individual* getBestInd() const {
+		return pop[pareto_bestID];
+	}
+
+	int getParetoBestId() const {
+		return pareto_bestID;
+	}
+
+	Common *conf;
+
+private:
 	bool add_to_population(Individual*);
 	bool add_to_pareto(int);
 	void tournament(Individual**);
 	int calc_crowd(int, const vector<int>&);
-	void hillclimbmix2();
-	bool foundinpar(int);
-	inline void print_fitness(ostream &, Individual*);
-	bool crowd_condition(vector<vector<int> >, vector<vector<int> >,Individual*,Individual*);
+	bool crowd_condition(vector<vector<int> >,Individual*,Individual*);
 	inline void update_pareto(int);
 	inline void update_pareto(int, int);
 	inline void update_bestInd(int);
 
-	bool updatePareto;
-
-	int fit_table[POPUL][4];
 	time_t start;
-	bool inpf3[POPUL];
+	vector<bool> inpf3;
 	vector<int> paretof;
 	vector<int> population;
-	Common *conf;
+
 	vector<Individual*> pop;
 	int crossel1;
 	int crossel2;
 	Printer *printer;
+	string printer_fname;
 
 	int stats[STAT_LEN];
-	int pareto_bestID, pareto_minHFit;
+	int pareto_bestID, pareto_minHFit, pareto_minTFit;
+	int seed;
 };
 
 } /* namespace std */

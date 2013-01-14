@@ -12,6 +12,9 @@ namespace std {
 
 Chromosome::Chromosome(int chrom_length, int no_colors) {
 	this->chrom_length = chrom_length;
+	chrom = new vector<int>(chrom_length, -1);
+	day = new vector<int>(chrom_length, -1);
+	slot = new vector<int>(chrom_length, -1);
 	this->no_colors = no_colors;
 	fit = new Fitness(this);
 }
@@ -26,21 +29,22 @@ Chromosome::Chromosome(const Chromosome* source) {
 	for (i = 0; i < NCOL; ++i) {
 		this->slot_map[i] = source->slot_map[i];
 	}
-	for (i = 0; i < CHROML; ++i) {
-		this->chrom[i] = source->chrom[i];
-		this->day[i] = source->day[i];
-		this->slot[i] = source->slot[i];
-	}
+	this->chrom = new vector<int>(*source->chrom);
+	this->day = new vector<int>(*source->day);
+	this->slot = new vector<int>(*source->slot);
 }
 
 Chromosome::~Chromosome() {
 	delete fit;
+	delete chrom;
+	delete day;
+	delete slot;
 }
 
 void Chromosome::add(int section, int val) {
-	chrom[section] = val;
-	day[section] = val / PERIODS;
-	slot[section] = val % PERIODS;
+	chrom->at(section) = val;
+	day->at(section) = val / PERIODS;
+	slot->at(section) = val % PERIODS;
 	slot_map[val].push_back(section);
 }
 /*
@@ -48,10 +52,10 @@ void Chromosome::add(int section, int val) {
  */
 void Chromosome::update(int section, int _slot) {
 	//remove destination slot from slot_map.
-	slot_map[chrom[section]].remove(section);
-	chrom[section] = _slot;
-	day[section] = _slot / PERIODS;
-	slot[section] = _slot % PERIODS;
+	slot_map[chrom->at(section)].remove(section);
+	chrom->at(section) = _slot;
+	day->at(section) = _slot / PERIODS;
+	slot->at(section) = _slot % PERIODS;
 	//add the slot to appropriate position
 	slot_map[_slot].push_back(section);
 }

@@ -10,7 +10,10 @@
 #define TD(x)	"<td>" << x << "</td>"
 
 namespace std {
-
+/**
+ * Opens filename.
+ * @param filename
+ */
 Printer::Printer(string filename) {
 	if (filename.length() == 0) {
 		cerr << "filename is invalid. Output.html will be used." << endl;
@@ -22,7 +25,11 @@ Printer::Printer(string filename) {
 Printer::~Printer() {
 	out.close();
 }
-
+/**
+ * Prints given Individual subject and stats associated with it. Adds </tr> in the end.
+ * @param subject
+ * @param stat
+ */
 void Printer::print(Individual* subject, int stat[]) {
 	out << "<tr>" << endl;
 	for (int i = 0; i < TOT_FIT_N; ++i) {
@@ -33,7 +40,12 @@ void Printer::print(Individual* subject, int stat[]) {
 	}
 	out << "</tr>";
 }
-
+/**
+ * Prints given Individual subject and stats associated with it. DOES NOT ADD </tr> in the end.
+ * Only difference is that.
+ * @param subject
+ * @param stat
+ */
 void Printer::printLast(Individual* subject, int stat[]) {
 	out << "<tr>" << endl;
 	for (int i = 0; i < TOT_FIT_N; ++i) {
@@ -43,10 +55,14 @@ void Printer::printLast(Individual* subject, int stat[]) {
 		out << TD("<b>" << stat[i] << "</b>/" << stat[i+1]);
 	}
 }
-
+/**
+ * Prints whole population.
+ * @param pop
+ * @param stat
+ */
 void Printer::print(vector<Individual*>&pop, int stat[]) {
 	out << "<tr><td>All Population</td>" << endl;
-	for (int i = 0; i < POPUL; ++i) {
+	for (int i = 0; i < Common::getConf()->pop_size; ++i) {
 		print(pop[i], stat);
 	}
 }

@@ -26,13 +26,13 @@ public:
 	list<int> *get_section_list(int slot);
 
 	inline int get_day(int section) const {
-		return day[section];
+		return day->at(section);
 	}
 	inline int get_period(int section) const {
-		return slot[section];
+		return slot->at(section);
 	}
 	inline int get_slot(int section) const{
-		return chrom[section];
+		return chrom->at(section);
 	}
 
 	const inline fitness_t& getFit() const {
@@ -53,9 +53,7 @@ public:
 private:
 	//our chromosome. Consist of all sections. Value represents the slot they are assigned to.
 	list<int> slot_map[NCOL];
-	int chrom[CHROML];
-	int day[CHROML];
-	int slot[CHROML];
+	vector <int> *chrom, *day, *slot;
 
 };
 

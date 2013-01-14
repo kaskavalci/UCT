@@ -27,6 +27,39 @@
 	} s_worst_chrom_t;
 	
 	
+ bool Individual::hc1() {
+ int rndidx;
+ int selcolor;
+ Individual hcchild(*this);
+ bool finalchange = false;
+
+ if (RND(1000) < 1000 * conf->hillrnd) {
+ do {
+ rndidx = RND(chrom_length);
+ } while (conf->courmat[rndidx].has_constraint == 1);
+ } else {
+ return false;
+ //rndidx = conflv[RND(conflv.size())];
+ }
+
+ for (selcolor = 0; selcolor < NCOL; selcolor++) {
+ //mutate the child's gene rndidx for every color except for its own
+ if (hcchild.chromosome->get_slot(rndidx) == selcolor)
+ continue;
+ hcchild.chromosome->update(rndidx, selcolor);
+ hcchild.buildtimetable();
+ hcchild.updatefitness();
+
+ if ((hcchild.fitnessh + hcchild.fitnessh1 < this->fitnessh + this->fitnessh1)
+ && (hcchild.fitnessf + hcchild.fitnessf2 < this->fitnessf + this->fitnessf2)) {
+ *this = hcchild;
+ return true;
+ }
+ }
+ //conflv.clear();
+ return finalchange;
+ }
+	
 int Fitness::fitnessHCAL(int print) {
 	int cnt = 0, cnt1 = 0;
 	size_t i, j;

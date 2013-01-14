@@ -11,6 +11,7 @@
 #include "Common.h"
 #include "Course.h"
 #include "Chromosome.h"
+#include "Mutation.h"
 #include <list>
 
 namespace std {
@@ -23,8 +24,8 @@ public:
 	Individual(const Individual&);
 	virtual ~Individual();
 
-	//bool hc1();
-	bool hc_worstsection(int);
+	bool hc_worstsection();
+	bool mutate_all();
 
 	void cross(const Individual&, const Individual&);
 	domination_t dominates(const Individual *target);
@@ -42,10 +43,15 @@ public:
 		return chromosome->fit->getFit();
 	}
 
+	const Chromosome* getConstChromosome() const {
+		return chromosome;
+	}
+
 private:
 	int findcourse(int sem, int dy, int slt);
 	void calcFit(fitness_t&, int,int);
 	Chromosome *chromosome;
+	Mutation *mutator;
 	int chrom_length;
 	int no_periods;
 	Common *conf;
