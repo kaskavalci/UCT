@@ -225,6 +225,13 @@ inline bool Fitness::fit_slabconf(int i, int j) {
 							&& chromosome->get_period(i) == chromosome->get_period(j)));
 }
 
+/**
+ * Course conflict fitness occurs when two courses in same semester overlaps or any two courses
+ * of the same lecturer overlaps in any semester.
+ * At each violation, fitness value is increased by one
+ * @param fit fitness struct to be filled
+ * @param print indicates print policy. 1 prints
+ */
 inline void Fitness::h_confmat(fitness_t& fit, int print) {
 	int j, idx;
 	for (int i = 0; i < conf->ChromSize; ++i) {
@@ -241,6 +248,13 @@ inline void Fitness::h_confmat(fitness_t& fit, int print) {
 	}
 }
 
+/**
+ * Same day conflict occurs when two sections of the same course are allocated to the same day.
+ * For example, CSE101.01.01 and CSE101.01.02 are one and two hour sessions of CSE101 course, section 01.
+ * If two sessions of the same section are placed in the same day, same day conflict occurs.
+ * @param fit fitness struct to be filled
+ * @param print indicates print policy. 1 prints
+ */
 inline void Fitness::h_sameday(fitness_t& fit, int print) {
 	int j, idx;
 	for (int i = 0; i < conf->ChromSize; ++i) {
@@ -256,6 +270,12 @@ inline void Fitness::h_sameday(fitness_t& fit, int print) {
 	}
 }
 
+/**
+ * Midday conflict is a hard fitness and very similar to course conflict.
+ * Only difference is, this fitness function checks course conflicts for only noon hours, 11:00 to 12:50.
+ * @param fit fitness struct to be filled
+ * @param print indicates print policy. 1 prints
+ */
 inline void Fitness::h_midday(fitness_t& fit, int print) {
 	int j, idx;
 	for (int i = 0; i < conf->ChromSize; ++i) {
@@ -271,6 +291,13 @@ inline void Fitness::h_midday(fitness_t& fit, int print) {
 	}
 }
 
+/**
+ * CSE department meeting is held on every Wednesday, at 12pm.
+ * This soft fitness function checks for CSE courses if they are placed on meeting slot.
+ * At each violation, fitness value is increased by one.
+ * @param fit fitness struct to be filled
+ * @param print indicates print policy. 1 prints
+ */
 inline void Fitness::s_depmet(fitness_t& fit, int print) {
 	for (int i = 0; i < conf->ChromSize; ++i) {
 		if (fit_sdepmeet(i)) {
