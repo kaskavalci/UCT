@@ -62,7 +62,7 @@ void Printer::printLast(Individual* subject, int stat[]) {
  */
 void Printer::print(vector<Individual*>&pop, int stat[]) {
 	out << "<tr><td>All Population</td>" << endl;
-	for (int i = 0; i < Common::getConf()->pop_size; ++i) {
+	for (unsigned int i = 0; i < Common::getConf()->pop_size; ++i) {
 		print(pop[i], stat);
 	}
 }

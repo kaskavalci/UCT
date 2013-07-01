@@ -20,7 +20,7 @@ extern int HC_whichFit;
 namespace std {
 
 Population::Population(int seed) {
-	int i;
+	unsigned int i;
 	time(&start);
 	//read inputs
 	FileReader *reader = new FileReader();

@@ -28,9 +28,19 @@ public:
 	inline int get_day(int section) const {
 		return day->at(section);
 	}
+	/**
+	 * returns the daily timeslot of a given course. It ranges from 0-4.
+	 * @param section in the chromosome, which is the course's section.
+	 * @return 0-4 daily timeslot.
+	 */
 	inline int get_period(int section) const {
 		return slot->at(section);
 	}
+	/**
+	 * returns the timeslot of the given course. Timeslot is from 0-20.
+	 * @param section in the chromosome, which is the course's section.
+	 * @return 0-20 timeslot.
+	 */
 	inline int get_slot(int section) const{
 		return chrom->at(section);
 	}

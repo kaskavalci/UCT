@@ -14,3 +14,4 @@
 Tests/
 *.exe
 *.html
+/Debug

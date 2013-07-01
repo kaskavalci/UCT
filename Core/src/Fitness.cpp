@@ -308,7 +308,13 @@ inline void Fitness::s_depmet(fitness_t& fit, int print) {
 		}
 	}
 }
-
+/**
+ * HW lab conflict. Fitness checks if both courses are the lab sessions of one of the following courses: cse221, cse421, cse232
+ * and they are allocated to the same day and same slot. Fitness value is incremented by one if such conflict
+ * is present.
+ * @param fit fitness struct to be filled
+ * @param print indicates print policy. 1 prints
+ */
 inline void Fitness::s_hwlab(fitness_t& fit, int print) {
 	int i, j;
 	for (i = 0; i < conf->ChromSize; ++i) {
@@ -323,6 +329,15 @@ inline void Fitness::s_hwlab(fitness_t& fit, int print) {
 	}
 }
 
+/**
+ * Lecturer conflicts. It checks for 4 soft conflicts. Either case, fitness is incremented by one.
+ * 1) Lecturer having 4 consecutive lectures in a day.
+ * 2) Lecturer having more than 4 hours of lecture in a day.
+ * 3) Lecturer having no free day for research.
+ * 4) Lecturer having 2 or more morning courses in a week.
+ * @param fit fitness struct to be filled
+ * @param print indicates print policy. 1 prints
+ */
 inline void Fitness::s_lecturer(fitness_t& fit, int print) {
 	int i, n;
 	int lectmatrix[5][10];
@@ -472,10 +487,13 @@ inline void Fitness::s_LTLconflict(fitness_t& fit, int print) {
 		}
 	}
 }
-/*
+
+/**
  * function that checks if 2 courses that are in consecutive semesters conflicts.
  * for countable fitness structure, only the first lecture will be used.
  * this is not correct but we can choose only ONE
+ * @param fit fitness struct to be filled
+ * @param print indicates print policy. 1 prints
  */
 inline void Fitness::s_ConsecSem(fitness_t& fit, int print) {
 	int i, j;
@@ -507,7 +525,11 @@ inline void Fitness::s_ConsecSem(fitness_t& fit, int print) {
 		}
 	}
 }
-
+/**
+ * Lunch hour conflict. If a semester doesn't have a free hour for lunch, fitness is incremented.
+ * @param fit fitness struct to be filled
+ * @param print indicates print policy. 1 prints
+ */
 inline void Fitness::s_lunch(fitness_t& fit, int print) {
 	short int lunch[8][5][3];
 	fill_n(&lunch[0][0][0], 8 * 5 * 3, -1);
@@ -534,6 +556,11 @@ inline void Fitness::s_lunch(fitness_t& fit, int print) {
 	}
 }
 
+/**
+ * If a one hour CSE course is allocated to 17-17:50 slot then fitness is incremented by one.
+ * @param fit fitness struct to be filled
+ * @param print indicates print policy. 1 prints
+ */
 inline void Fitness::s_eveningLecture(fitness_t& fit, int print) {
 	for (int i = 0; i < conf->ChromSize; i++) {
 		if (conf->courmat[i].hours == 1 && chromosome->get_period(i) == 3 && conf->cse[i] == 1) {
@@ -545,6 +572,11 @@ inline void Fitness::s_eveningLecture(fitness_t& fit, int print) {
 	}
 }
 
+/**
+ * If a 2 hour lab session of a CSE course is allocated 9-10:50 timeslot, then fitness is incremented by one.
+ * @param fit fitness struct to be filled
+ * @param print indicates print policy. 1 prints
+ */
 inline void Fitness::s_morningLab(fitness_t& fit, int print) {
 	for (int i = 0; i < conf->ChromSize; i++) {
 		if (conf->lab[i] == 1 && chromosome->get_period(i) == 0 && conf->courmat[i].hours == 2) {
@@ -556,6 +588,11 @@ inline void Fitness::s_morningLab(fitness_t& fit, int print) {
 	}
 }
 
+/**
+ * Consecutive lab conflict. If lab sessions of two consecutive semesters conftlict, fitness is incremented by one.
+ * @param fit fitness struct to be filled
+ * @param print indicates print policy. 1 prints
+ */
 inline void Fitness::s_ConsecSemLab(fitness_t& fit, int print) {
 	int i;
 	for (size_t h = 0; h < conf->lectures.size(); ++h) {
