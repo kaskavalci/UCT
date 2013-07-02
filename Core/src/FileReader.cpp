@@ -180,6 +180,7 @@ int FileReader::init_course(Course newCourse, int i) {
 		//we don't expect lecturers more than 1000.
 		newCourse.lecturerID = i + 1000;
 	}
+	//deneme
 	//push course to vector
 	conf->courmat.push_back(newCourse);
 
