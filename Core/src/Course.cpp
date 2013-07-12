@@ -15,6 +15,9 @@ std::Course::Course() {
 	cname = "Uninitilized course";
 	lname = "Uninitilized course";
 	uniqueID = lecturerID = semid = hours = -1;
-	has_constraint = c2day = c2slot = 0;
+	cons_slot = -1;
+	section = -1;
+	has_cons = false;
 	isLab = false;
+	split = false;
 }

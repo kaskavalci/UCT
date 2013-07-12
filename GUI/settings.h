@@ -1,10 +1,9 @@
 #ifndef SETTINGS_H
 #define SETTINGS_H
 
-#include <QDialog>
 #include <QtXml>
 #include <QtCore>
-#include <QtGui>
+#include <QtWidgets>
 
 namespace Ui {
   class Settings;
@@ -62,7 +61,7 @@ private:
   void WriteParam(QString);
 
   QString pathCourse, pathPrereq, pathParameters;
-  enum par {p_cname, p_section, p_islab, p_lect, p_sem, p_hour, p_day, p_slot};
+  enum par {p_name, p_id, p_lecturer, p_hour, p_cons_slot, p_split};
 
 };
 

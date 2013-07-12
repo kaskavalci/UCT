@@ -1,10 +1,13 @@
 TEMPLATE = app
 QT       += core gui \
-            xml
+            xml \
+            widgets
 
-INCLUDEPATH += C:\\MinGW\\boost_1_52_0 \
-                ../Core/include/ \
-QMAKE_CXXFLAGS += -std=c++0x
+INCLUDEPATH += C:\\boost_1_53_0 \
+                ../Core/include/
+
+QMAKE_CXXFLAGS += -std=c++11
+CONFIG += c++11
 HEADERS += \
     ui_xmlparser.h \
     ui_settings.h \

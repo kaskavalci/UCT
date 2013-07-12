@@ -80,27 +80,22 @@ void FileReader::readcourses(string filename) {
 		newCourse.hours = course.attribute("NumHours").as_int();
 		newCourse.isLab = course.attribute("isLab").as_bool();
 		newCourse.section = course.attribute("Section").as_int();
+		newCourse.split = course.attribute("Split").as_bool();
 
 		labStatus = newCourse.isLab ? 1 : 0;
 		newCourse.uniqueID = hash(
 				newCourse.cname + boost::lexical_cast<string>(newCourse.section)
 						+ boost::lexical_cast<string>(labStatus));
 
-		if (course.attribute("ConstDay").as_int() == -1) {
-			newCourse.has_constraint = -1;
-			newCourse.c2day = -1;
-		} else {
-			newCourse.has_constraint = 1;
-			newCourse.c2day = course.attribute("ConstDay").as_int();
-		}
-		if (course.attribute("ConstSlot").as_int() == -1) {
-			newCourse.c2slot = -1;
-		} else {
-			newCourse.c2slot = course.attribute("ConstSlot").as_int();
+		//if course have constraint, then update corresponding available slots
+		if (course.attribute("ConstSlot").as_int() != -1) {
+			newCourse.has_cons= true;
+			newCourse.cons_slot = course.attribute("ConstSlot").as_int();
+
+			conf->update_available_slots(&newCourse);
 		}
 
 		i = init_course(newCourse, i);
-
 	}
 }
 
@@ -152,41 +147,69 @@ void FileReader::readinputparam(string filename) {
 				}
 				conf->groups.push_back(groupList);
 			}
+		} else if (!inpname.compare(PARAM_SLOTS)) {
+			vector<int> onehourList, twohourList, threehourList;
+			string name;
+			for (pugi::xml_node slot_list = course.child("SlotList"); slot_list; slot_list = slot_list.next_sibling("SlotList")) {
+				name = slot_list.attribute("Name").as_string();
+				vector<int> *slots;
+				if (!name.compare("OneHour")) {
+					slots = &onehourList;
+				} else if (!name.compare("TwoHour")) {
+					slots = &twohourList;
+				} else if (!name.compare("ThreeHour")) {
+					slots = &threehourList;
+				}
+				//iterate all constraints in group
+				for (pugi::xml_node constraint = slot_list.child("Slot"); constraint;
+						constraint = constraint.next_sibling("Slot")) {
+					slots->push_back(constraint.attribute("Name").as_int());
+				}
+			}
+
+			conf->construct_available_slots(&onehourList, &twohourList, &threehourList);
+
 		}
 	}
 }
-
-int FileReader::init_course(Course newCourse, int i) {
+/**
+ * This function depends on Course's being object not a pointer. Thus, depends on courmat to be object
+ * vector, not a pointer vector. IF YOU CHANGE COURMAT TO POINTER update this function.
+ * @param newCourse OBJECT to be inserted. Object will be copied to courmat.
+ * @param id number that represents section in the chromosome and courmat.
+ * @return id of the last insertion.
+ */
+int FileReader::init_course(Course newCourse, int id) {
 	//split the course
 	bool toSplit = false;
-	if (newCourse.hours == 3) {
+	if (newCourse.hours == 3 && newCourse.split) {
 		toSplit = true;
 		newCourse.hours = 2;
+		newCourse.split = false;
 	}
 	//add lab info
 	if (newCourse.isLab) {
 		conf->lab.push_back(1);
-		conf->labid.push_back(conf->add_labsession(labSession_t(newCourse.cname, i)));
+		conf->labid.push_back(conf->add_labsession(labSession_t(newCourse.cname, id)));
 	} else {
 		conf->lab.push_back(-1);
 		conf->labid.push_back(-1);
 	}
 	//add lecturer to list and update courses lecturer ID. only add cse courses
 	if (newCourse.cname.substr(0, 3) == "cse") {
-		newCourse.lecturerID = conf->add_lecturer(newCourse.lname, i);
+		newCourse.lecturerID = conf->add_lecturer(newCourse.lname, id);
 	} else {
 		//here we assume faculty courses does not have valid lecturer name and they don't need to be in lecturer list.
 		//for solid code we should assign them a lecturerID. uniquenes can be achieved by starting lecturersID by 1000.
 		//we don't expect lecturers more than 1000.
-		newCourse.lecturerID = i + 1000;
+		newCourse.lecturerID = id + 1000;
 	}
-	//deneme
 	//push course to vector
 	conf->courmat.push_back(newCourse);
 
 	//add CSE lectures
-	if (conf->findlecture(i) == -1 && newCourse.cname.substr(0, 3) == "cse") {
-		conf->add_lecture(newCourse.cname, std::hash<std::string>()(newCourse.cname), i);
+	if (conf->findlecture(id) == -1 && newCourse.cname.substr(0, 3) == "cse") {
+		conf->add_lecture(newCourse.cname, std::hash<std::string>()(newCourse.cname), id);
 	}
 
 	if (newCourse.cname.substr(0, 3) == "cse")
@@ -197,9 +220,11 @@ int FileReader::init_course(Course newCourse, int i) {
 
 	if (toSplit) {
 		newCourse.hours = 1;
-		return init_course(newCourse, i + 1);
+		//overwritten but make sure that split will be false anytime in the execution.
+		newCourse.split = false;
+		return init_course(newCourse, id + 1);
 	}
-	return i + 1;
+	return id + 1;
 }
 
 } /* namespace std */

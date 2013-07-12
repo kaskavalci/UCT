@@ -238,7 +238,7 @@ inline void Fitness::h_confmat(fitness_t& fit, int print) {
 		for (j = i + 1; j < conf->ChromSize; ++j) {
 			if (fit_hconfmat(i, j)) {
 				//if i has constraints, pass the fitness to j. they both cannot have constraints.
-				idx = conf->courmat[i].has_constraint ? j : i;
+				idx = conf->courmat[i].has_cons ? j : i;
 				INC_HARD(idx, fit_hConfmat)
 				if (print == 1) {
 					cout << "Hard 1 Confmat " << conf->courmat[i].cname << " " << conf->courmat[j].cname << endl;
@@ -260,7 +260,7 @@ inline void Fitness::h_sameday(fitness_t& fit, int print) {
 	for (int i = 0; i < conf->ChromSize; ++i) {
 		for (j = i + 1; j < conf->ChromSize; ++j) {
 			if (fit_hsameday(i, j)) {
-				idx = conf->courmat[i].has_constraint ? j : i;
+				idx = conf->courmat[i].has_cons ? j : i;
 				INC_HARD(idx, fit_hSameDay)
 				if (print == 1) {
 					cout << "Hard 2 Same Day " << conf->courmat[i].cname << " " << conf->courmat[j].cname << endl;
@@ -281,7 +281,7 @@ inline void Fitness::h_midday(fitness_t& fit, int print) {
 	for (int i = 0; i < conf->ChromSize; ++i) {
 		for (j = i + 1; j < conf->ChromSize; ++j) {
 			if (fit_hmidday(i, j)) {
-				idx = conf->courmat[i].has_constraint ? j : i;
+				idx = conf->courmat[i].has_cons ? j : i;
 				INC_HARD(idx, fit_hMidHour)
 				if (print == 1) {
 					cout << "Hard 3 Hours 11-13 " << conf->courmat[i].cname << " " << conf->courmat[j].cname << endl;

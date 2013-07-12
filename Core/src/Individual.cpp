@@ -7,7 +7,6 @@
 
 #include "Individual.h"
 #include "Common.h"
-#include <stdlib.h>
 #include <stdio.h>
 #include <iostream>
 #include "FileReader.h"
@@ -56,14 +55,13 @@ Individual::Individual(Common *conf) {
 	chromosome = new Chromosome(chrom_length, NCOL);
 
 	for (i = 0; i < chrom_length; i++) {
-		if (conf->courmat[i].has_constraint == 1) {
-			chromosome->add(i, 4 * conf->courmat[i].c2day + conf->courmat[i].c2slot);
+		if (conf->courmat[i].has_cons) {
+			chromosome->add(i, conf->courmat[i].cons_slot);
 		} else {
-			chromosome->add(i, RND(NCOL));
+			chromosome->add(i, conf->assign_random_slot(i));
 		}
 	}
 	chromosome->updatefitness(0);
-	mutator = new Mutation(chromosome);
 }
 
 Individual::Individual() {
@@ -72,17 +70,14 @@ Individual::Individual() {
 	chrom_length = conf->ChromSize;
 	no_periods = 4;
 	chromosome = new Chromosome(chrom_length, NCOL);
-	mutator = new Mutation(chromosome);
 }
 
 Individual::~Individual() {
 	delete (chromosome);
-	delete mutator;
 }
 
 Individual::Individual(const Individual& source) {
 	this->chromosome = new Chromosome(source.chromosome);
-	this->mutator = new Mutation(this->chromosome);
 	this->chrom_length = source.chrom_length;
 	this->conf = source.conf;
 	this->no_periods = source.no_periods;
@@ -92,7 +87,6 @@ Individual &Individual::operator=(const Individual &source) {
 	if (this->chromosome)
 		delete (this->chromosome);
 	this->chromosome = new Chromosome(source.chromosome);
-	this->mutator = new Mutation(this->chromosome);
 	this->chrom_length = source.chrom_length;
 	this->conf = source.conf;
 	this->no_periods = source.no_periods;
@@ -243,314 +237,8 @@ void Individual::printlect() {
 }
 
 bool Individual::mutate_all() {
-	return mutator->mutate_all();
+	return mutate();
 }
-
-/*
- void Individual::printdekanlik() {
- size_t i;
- string sched2, sched1;
- int lidx;
- for (i = 0; i < chrom_length; i++) {
- lidx = conf->findlecture(i);
- if (lidx != -1) {
- if (conf->courmat[i].cname.at(7) == '0' && conf->courmat[i].hours == 1
- && conf->courmat[i].cname.at(8) == '1') {
- conf->lectures[lidx].cid1day = chromosome->day[i];
- conf->lectures[lidx].cid1slot = chromosome->slot[i];
- }
- if (conf->courmat[i].cname.at(7) == '0' && conf->courmat[i].hours == 2
- && conf->courmat[i].cname.at(8) == '1') {
- conf->lectures[lidx].cid2day = chromosome->day[i];
- conf->lectures[lidx].cid2slot = chromosome->slot[i];
- }
- if (conf->courmat[i].cname.at(7) == '0' && conf->courmat[i].hours == 1
- && conf->courmat[i].cname.at(8) == '2') {
- conf->lectures[lidx].cid3day = chromosome->day[i];
- conf->lectures[lidx].cid3slot = chromosome->slot[i];
- }
- if (conf->courmat[i].cname.at(7) == '0' && conf->courmat[i].hours == 2
- && conf->courmat[i].cname.at(8) == '2') {
- conf->lectures[lidx].cid4day = chromosome->day[i];
- conf->lectures[lidx].cid4slot = chromosome->slot[i];
- }
- if (conf->courmat[i].cname.at(7) == 'L' && conf->courmat[i].cname.at(8) == '1'
- && conf->courmat[i].hours == 2) {
- conf->lectures[lidx].lab1day = chromosome->day[i];
- conf->lectures[lidx].lab1slot = chromosome->slot[i];
- }
- if (conf->courmat[i].cname.at(7) == 'L' && conf->courmat[i].cname.at(8) == '2'
- && conf->courmat[i].hours == 2) {
- conf->lectures[lidx].lab2day = chromosome->day[i];
- conf->lectures[lidx].lab2slot = chromosome->slot[i];
- }
- if (conf->courmat[i].cname.at(7) == 'L' && conf->courmat[i].hours == 1) {
- conf->lectures[lidx].lab3day = chromosome->day[i];
- conf->lectures[lidx].lab3slot = chromosome->slot[i];
- }
- }
- }
- printf("\n");
- for (i = 0; i < conf->lectures.size(); i++) {
- sched2.clear();
- switch (conf->lectures[i].cid2day) {
- case 0:
- sched2 = "M";
- break;
- case 1:
- sched2 = "T";
- break;
- case 2:
- sched2 = "W";
- break;
- case 3:
- sched2 = "R";
- break;
- case 4:
- sched2 = "F";
- break;
- }
- switch (conf->lectures[i].cid2slot) {
- case 0:
- sched2.append("12");
- break;
- case 1:
- sched2.append("34");
- break;
- case 2:
- sched2.append("67");
- break;
- case 3:
- sched2.append("89");
- break;
- }
- sched1.clear();
- switch (conf->lectures[i].cid1day) {
- case 0:
- sched1 = "M";
- break;
- case 1:
- sched1 = "T";
- break;
- case 2:
- sched1 = "W";
- break;
- case 3:
- sched1 = "R";
- break;
- case 4:
- sched1 = "F";
- break;
- }
- switch (conf->lectures[i].cid1slot) {
- case 0:
- sched1.append("3");
- break;
- case 1:
- sched1.append("4");
- break;
- case 2:
- sched1.append("5");
- break;
- case 3:
- sched1.append("X");
- break;
- }
- if (!sched1.empty()) {
- sched2.append("-");
- sched2.append(sched1);
- }
- if (!sched2.empty() && !conf->courmat[conf->lectures[i].cid2].cname.empty())
- printf("%-12s %-12s  %-12s %-12c %-12s \n", conf->courmat[conf->lectures[i].cid2].lname.data(),
- conf->courmat[conf->lectures[i].cid2].cname.data(), conf->lectures[i].lectname.data(),
- conf->courmat[conf->lectures[i].cid2].cname.at(8), sched2.data());
- }
- for (i = 0; i < conf->lectures.size(); i++) {
- sched2.clear();
- switch (conf->lectures[i].cid4day) {
- case 0:
- sched2 = "M";
- break;
- case 1:
- sched2 = "T";
- break;
- case 2:
- sched2 = "W";
- break;
- case 3:
- sched2 = "R";
- break;
- case 4:
- sched2 = "F";
- break;
- }
- switch (conf->lectures[i].cid4slot) {
- case 0:
- sched2.append("12");
- break;
- case 1:
- sched2.append("34");
- break;
- case 2:
- sched2.append("67");
- break;
- case 3:
- sched2.append("89");
- break;
- }
- sched1.clear();
- switch (conf->lectures[i].cid3day) {
- case 0:
- sched1 = "M";
- break;
- case 1:
- sched1 = "T";
- break;
- case 2:
- sched1 = "W";
- break;
- case 3:
- sched1 = "R";
- break;
- case 4:
- sched1 = "F";
- break;
- }
- switch (conf->lectures[i].cid3slot) {
- case 0:
- sched1.append("3");
- break;
- case 1:
- sched1.append("4");
- break;
- case 2:
- sched1.append("5");
- break;
- case 3:
- sched1.append("X");
- break;
- }
- if (!sched1.empty()) {
- sched2.append("-");
- sched2.append(sched1);
- }
- if (!sched2.empty() && !conf->courmat[conf->lectures[i].cid4].cname.empty())
- printf("%-12s %-12s  %-12s %-12c %-12s \n", conf->courmat[conf->lectures[i].cid4].lname.data(),
- conf->courmat[conf->lectures[i].cid4].cname.data(), conf->lectures[i].lectname.data(),
- conf->courmat[conf->lectures[i].cid4].cname.at(8), sched2.data());
- }
- for (i = 0; i < conf->lectures.size(); i++) {
- sched2.clear();
- switch (conf->lectures[i].lab1day) {
- case 0:
- sched2 = "M";
- break;
- case 1:
- sched2 = "T";
- break;
- case 2:
- sched2 = "W";
- break;
- case 3:
- sched2 = "R";
- break;
- case 4:
- sched2 = "F";
- break;
- }
- switch (conf->lectures[i].lab1slot) {
- case 0:
- sched2.append("12");
- break;
- case 1:
- sched2.append("34");
- break;
- case 2:
- sched2.append("67");
- break;
- case 3:
- sched2.append("89");
- break;
- }
- if (!sched2.empty() && !conf->courmat[conf->lectures[i].lab1].cname.empty())
- printf("%-12s %-12s  %-12s %-12c %-12s \n", conf->courmat[conf->lectures[i].lab1].lname.data(),
- conf->courmat[conf->lectures[i].lab1].cname.data(), conf->lectures[i].lectname.data(),
- conf->courmat[conf->lectures[i].lab1].cname.at(8), sched2.data());
- sched2.clear();
- switch (conf->lectures[i].lab2day) {
- case 0:
- sched2 = "M";
- break;
- case 1:
- sched2 = "T";
- break;
- case 2:
- sched2 = "W";
- break;
- case 3:
- sched2 = "R";
- break;
- case 4:
- sched2 = "F";
- break;
- }
- switch (conf->lectures[i].lab2slot) {
- case 0:
- sched2.append("12");
- break;
- case 1:
- sched2.append("34");
- break;
- case 2:
- sched2.append("67");
- break;
- case 3:
- sched2.append("89");
- break;
- }
- if (!sched2.empty() && !conf->courmat[conf->lectures[i].lab2].cname.empty())
- printf("%-12s %-12s  %-12s %-12c %-12s \n", conf->courmat[conf->lectures[i].lab2].lname.data(),
- conf->courmat[conf->lectures[i].lab2].cname.data(), conf->lectures[i].lectname.data(),
- conf->courmat[conf->lectures[i].lab2].cname.at(8), sched2.data());
- sched2.clear();
- switch (conf->lectures[i].lab3day) {
- case 0:
- sched2 = "M";
- break;
- case 1:
- sched2 = "T";
- break;
- case 2:
- sched2 = "W";
- break;
- case 3:
- sched2 = "R";
- break;
- case 4:
- sched2 = "F";
- break;
- }
- switch (conf->lectures[i].lab3slot) {
- case 0:
- sched2.append("3");
- break;
- case 1:
- sched2.append("4");
- break;
- case 2:
- sched2.append("5");
- break;
- case 3:
- sched2.append("X");
- break;
- }
- if (!sched2.empty() && !conf->courmat[conf->lectures[i].lab3].cname.empty())
- printf("%-12s %-12s  %-12s %-12c %-12s \n", conf->courmat[conf->lectures[i].lab3].lname.data(),
- conf->courmat[conf->lectures[i].lab3].cname.data(), conf->lectures[i].lectname.data(),
- conf->courmat[conf->lectures[i].lab3].cname.at(8), sched2.data());
- }
- }
- */
 
 void inline Individual::calcFit(fitness_t & fit, int print, int type) {
 	chromosome->fit->calcFit(print, fit, type);
@@ -676,7 +364,7 @@ bool Individual::hc_worstsection() {
 			return false;
 		}
 		//no HC for courses that have constraints. they have fixed hours.
-		if (conf->courmat[it->at(fit_mGeneID)].has_constraint == 1) {
+		if (conf->courmat[it->at(fit_mGeneID)].has_cons) {
 			continue;
 		}
 		//restore old slot of gene, to reduce function calls.
@@ -742,6 +430,21 @@ bool Individual::hc_worstsection() {
 		//todo: updatefitness'ý deðiþtir. modüler fitness tut, herþeyi baþtan hesaplama.
 	}
 	return finalchange;
+}
+
+bool Individual::mutate() {
+	if (RND(1000000) < 10000 * conf->mutrate)
+	{
+		int pos, val;
+		pos = RND(conf->ChromSize);
+		val = conf->assign_random_slot(pos);
+		//mutate only if no constraint given on that lecture
+		if (!conf->courmat[pos].has_cons) {
+			chromosome->update(pos, val);
+			return true;
+		}
+	}
+	return false;
 }
 
 Chromosome* Individual::getChromosome() {

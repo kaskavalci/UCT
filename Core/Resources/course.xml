@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Semesters>
+	<Semester id="1" hede="s">
+		<Course id="cse252">
+			<Section id="0" Lecturer="gurhan" Hours="3" ConsSlot="3" Split="1"></Section>
+			<Section id="1" Lecturer="gurhan" Hours="3" Split="1"></Section>
+			<Lab id="0" Lecturer="isa" Hours="2" Split="0"></Lab>
+		</Course>
+		<Course id="cse272">
+			<Section id="0" Lecturer="gurhan" Hours="3" Split="1"></Section>
+			<Lab id="0" Lecturer="isa" Hours="2" Split="0"></Lab>
+		</Course>
+	</Semester>
+	<Semester id="2">
+
+	</Semester>
+	<Semester id="3">
+
+	</Semester>
+	<Semester id="4">
+
+	</Semester>
+	<Semester id="5">
+
+	</Semester>
+	<Semester id="6">
+
+	</Semester>
+	<Semester id="7">
+
+	</Semester>
+	<Semester id="8">
+
+	</Semester>
+</Semesters>

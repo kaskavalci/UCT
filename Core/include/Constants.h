@@ -12,6 +12,7 @@
 #include <cstdint>
 #include <array>
 #include <vector>
+#include <stdlib.h>
 
 #define PERIODS	4
 #define NCOL 20
@@ -95,5 +96,6 @@ struct labSession_t {
 #define PARAM_SELECTIONPOOLSIZE	"SelectionPoolSize"
 #define PARAM_SELECTIONCANDIDATESIZE  "SelectionCandidatePoolSize"
 #define PARAM_GROUPS  "Groups"
+#define PARAM_SLOTS  "AvailableSlots"
 
 #endif /* CONSTANTS_H_ */

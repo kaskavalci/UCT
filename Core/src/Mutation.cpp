@@ -11,6 +11,10 @@
 
 namespace std {
 
+/**
+ * Depreciated. Mutation now takes place in Individual.
+ * @param chrom
+ */
 Mutation::Mutation(Chromosome *chrom) {
 	this->conf = Common::getConf();
 	chromosome = chrom;
@@ -27,7 +31,7 @@ bool Mutation::mutate() {
 		pos = RND(conf->ChromSize);
 		val = RND(NCOL);
 		//mutate only if no constraint given on that lecture
-		if (conf->courmat[pos].has_constraint != 1) {
+		if (!conf->courmat[pos].has_cons) {
 			chromosome->update(pos, val);
 			return true;
 		}
@@ -44,7 +48,7 @@ bool Mutation::mutateg1() {
 		col1 = chromosome->get_slot(k);
 		col2 = RND(chromosome->no_colors);
 		for (i = 0; i < conf->ChromSize; i++) {
-			if (conf->courmat[i].has_constraint == 1) continue;
+			if (conf->courmat[i].has_cons) continue;
 			if (chromosome->get_slot(i) == col1) {
 				chromosome->update(i, col2);
 				retval = true;
@@ -73,7 +77,7 @@ bool Mutation::mutateg3() {
 		val1 = chromosome->get_slot(pos1);
 		val2 = chromosome->get_slot(pos2);
 		for (i = 0; i < conf->ChromSize; i++) {
-			if (conf->courmat[i].has_constraint == 1) continue;
+			if (conf->courmat[i].has_cons) continue;
 			if (chromosome->get_slot(i) == val1 && RND(100) < 50) {
 				chromosome->update(i, val2);
 				retval = true;
@@ -104,7 +108,7 @@ bool Mutation::mutateg5() {
 		val2 = chromosome->get_slot(pos2);
 		val3 = chromosome->get_slot(pos3);
 		for (i = 0; i < conf->ChromSize; i++) {
-			if (conf->courmat[i].has_constraint == 1) continue;
+			if (conf->courmat[i].has_cons) continue;
 			sel = RND(2);
 			if (chromosome->get_slot(i) == val3 && sel == 0 && RND(100) < 50) {
 				chromosome->update(i, val1);

@@ -27,6 +27,9 @@ public:
 	int add_lecturer(string, int);
 	int add_labsession(labSession_t);
 	int add_lecture(string, int, int);
+	int assign_random_slot(int courseID);
+	void construct_available_slots(vector<int> *, vector<int> *, vector<int> *);
+	void update_available_slots(Course *);
 
 	vector< vector<int> > prereq;
 
@@ -36,6 +39,7 @@ public:
 	vector<labSession_t> labcourses;
 	vector<Lecture> lectures;
 	vector<int> labid, lab, cse;
+
 
 	int ChromSize;
 	time_t duration;
@@ -49,10 +53,12 @@ public:
 	size_t pop_size, sel_poolsize, sel_candidatesize;
 	int pareto_size;
 	vector<vector<int> > groups;
+	vector<vector<int> > available_slots[8];
 private:
 	static bool instanceFlag;
 	static Common *conf;
 	void initlab(Lecture*, int);
+	void erase_slot(vector<int> *, int);
 	Common();
 
 };

@@ -3,7 +3,7 @@
 
 #include <QMainWindow>
 #include "execga.h"
-#include <QtGui>
+#include <QtWidgets>
 
 namespace Ui {
 class MainWindow;

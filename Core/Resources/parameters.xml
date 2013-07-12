@@ -34,4 +34,77 @@
 			<Constraint Name="Morning Lab" ID='14' />
 		</Group>
 	</Parameter>
+	<Parameter Name="AvailableSlots">
+		<SlotList Name="OneHour">
+			<Slot Name="2" />
+			<Slot Name="3" />
+			<Slot Name="4" />
+			<Slot Name="7" />
+			<Slot Name="8" />
+			<Slot Name="11" />
+			<Slot Name="12" />
+			<Slot Name="13" />
+			<Slot Name="16" />
+			<Slot Name="17" />
+			<Slot Name="20" />
+			<Slot Name="21" />
+			<Slot Name="22" />
+			<Slot Name="25" />
+			<Slot Name="26" />
+			<Slot Name="29" />
+			<Slot Name="30" />
+			<Slot Name="31" />
+			<Slot Name="34" />
+			<Slot Name="35" />
+			<Slot Name="38" />
+			<Slot Name="39" />
+			<Slot Name="40" />
+			<Slot Name="43" />
+			<Slot Name="44" />
+		</SlotList>
+		<SlotList Name="TwoHour">
+			<Slot Name="0" />
+			<Slot Name="2" />
+			<Slot Name="3" />
+			<Slot Name="5" />
+			<Slot Name="7" />
+			<Slot Name="9" />
+			<Slot Name="11" />
+			<Slot Name="12" />
+			<Slot Name="14" />
+			<Slot Name="16" />
+			<Slot Name="18" />
+			<Slot Name="20" />
+			<Slot Name="21" />
+			<Slot Name="23" />
+			<Slot Name="25" />
+			<Slot Name="27" />
+			<Slot Name="29" />
+			<Slot Name="30" />
+			<Slot Name="32" />
+			<Slot Name="34" />
+			<Slot Name="36" />
+			<Slot Name="38" />
+			<Slot Name="39" />
+			<Slot Name="41" />
+			<Slot Name="43" />
+		</SlotList>
+		<SlotList Name="ThreeHour">
+			<Slot Name="0" />
+			<Slot Name="2" />
+			<Slot Name="5" />
+			<Slot Name="9" />
+			<Slot Name="11" />
+			<Slot Name="14" />
+			<Slot Name="18" />
+			<Slot Name="20" />
+			<Slot Name="23" />
+			<Slot Name="27" />
+			<Slot Name="29" />
+			<Slot Name="32" />
+			<Slot Name="36" />
+			<Slot Name="38" />
+			<Slot Name="41" />
+		</SlotList>
+	</Parameter>
 </Parameters>

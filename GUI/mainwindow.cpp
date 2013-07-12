@@ -89,7 +89,7 @@ void MainWindow::initTabs()
 	QVBoxLayout *layout = new QVBoxLayout(newTab);
 	tableView = new QTableView(newTab);
 	tableView->verticalHeader()->setDefaultSectionSize(40);
-	tableView->horizontalHeader()->setResizeMode(QHeaderView::Stretch);
+    tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
 	model[i-1] = new QStandardItemModel(10, 5, this);
 
 	tableView->setEditTriggers(QAbstractItemView::NoEditTriggers);

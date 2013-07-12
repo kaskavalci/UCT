@@ -22,8 +22,10 @@ public:
 	int semid;
 	int hours;
 	int section;
-	int has_constraint, c2day, c2slot;
+	int cons_slot;
+	bool has_cons;
 	bool isLab;
+	bool split;
 };
 
 } /* namespace std */

@@ -51,10 +51,10 @@ private:
 	int findcourse(int sem, int dy, int slt);
 	void calcFit(fitness_t&, int,int);
 	Chromosome *chromosome;
-	Mutation *mutator;
 	int chrom_length;
 	int no_periods;
 	Common *conf;
+	bool mutate();
 };
 
 } /* namespace std */
