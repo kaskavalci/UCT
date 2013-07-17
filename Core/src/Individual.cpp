@@ -52,7 +52,7 @@ Individual::Individual(Common *conf) {
 	this->conf = conf;
 	chrom_length = conf->ChromSize;
 	no_periods = 4;
-	chromosome = new Chromosome(chrom_length, NCOL);
+	chromosome = new Chromosome(chrom_length);
 
 	for (i = 0; i < chrom_length; i++) {
 		if (conf->courmat[i].has_cons) {
@@ -69,7 +69,7 @@ Individual::Individual() {
 
 	chrom_length = conf->ChromSize;
 	no_periods = 4;
-	chromosome = new Chromosome(chrom_length, NCOL);
+	chromosome = new Chromosome(chrom_length);
 }
 
 Individual::~Individual() {
@@ -241,7 +241,7 @@ bool Individual::mutate_all() {
 }
 
 void inline Individual::calcFit(fitness_t & fit, int print, int type) {
-	chromosome->fit->calcFit(print, fit, type);
+	chromosome->fit->calcFit(fit, type, print);
 }
 
 int Individual::findcourse(int sem, int dy, int slt) {

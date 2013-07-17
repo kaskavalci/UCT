@@ -32,18 +32,19 @@ Fitness::Fitness(const Chromosome *chrom) {
 	fill(fitness->fitness, fitness->fitness + TOT_FIT_N, 0);
 }
 
-Fitness::Fitness(const Fitness* source) {
+Fitness::Fitness(const IFitness* source) {
 	conf = Common::getConf();
 	fitness = new fitness_t(conf->ChromSize);
 	chromosome = NULL;
-	*fitness = *source->fitness;
+	*fitness = source->getFit();
 }
+
 /**
  * Calculates hard and soft fitness value. Warning: Large overhead.
  * @param print 0 does not print out the fitness calculation results, 1 prints.
  * @param fit fitness value to be filled. default is Chromosome's fitness.
  */
-void Fitness::calcFit(int print, fitness_t& fit, int type) {
+void Fitness::calcFit(fitness_t& fit, int type, int print) {
 	fit.hard_fit = 0;
 	fit.soft_fit = 0;
 	//init chrom IDs in fitnessBySect struct. it is to be used while sorting
@@ -52,7 +53,7 @@ void Fitness::calcFit(int print, fitness_t& fit, int type) {
 		fit.fitnessBySect[i][fit_mGeneID] = i;
 	}
 	fill(fit.fitness, fit.fitness + TOT_FIT_N, 0);
-
+/*
 	//hard fitness calculation
 	if (type == hc_hard || type == hc_both) {
 		h_confmat(fit, print);
@@ -70,7 +71,7 @@ void Fitness::calcFit(int print, fitness_t& fit, int type) {
 		s_lunch(fit, print);
 		s_eveningLecture(fit, print);
 		s_morningLab(fit, print);
-	}
+	}*/
 	fit.total_fit = fit.hard_fit + fit.soft_fit;
 }
 
@@ -658,10 +659,6 @@ inline void Fitness::s_ConsecSemLab(fitness_t& fit, int print) {
 	}
 }
 
-void Fitness::updateFitness(int print) {
-	calcFit(print, *fitness, hc_both);
-}
-
 int Fitness::decode(int cidx) {
 	int rslot = -1, rval = -1;
 	if (conf->courmat[cidx].hours == 1) {
@@ -700,7 +697,7 @@ int Fitness::decode(int cidx) {
 }
 
 Fitness::~Fitness() {
-	// TODO Auto-generated destructor stub
+	delete fitness;
 }
 
 } /* namespace std */

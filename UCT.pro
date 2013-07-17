@@ -14,3 +14,8 @@ SUBDIRS += \
     GUI
 
 CONFIG += ordered
+
+copy.path    = $${OUT_PWD}/GUI/Resources
+copy.files   = Core/Resources/*.xml
+
+INSTALLS += copy

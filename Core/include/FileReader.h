@@ -14,7 +14,7 @@ namespace std {
 
 class FileReader {
 public:
-	FileReader(string path_parameter = "Resources/parameters.xml", string path_course = "Resources/courses.xml", string path_prereq = "Resources/prereq.xml");
+	FileReader(string path_parameter = "Resources/parameters.xml", string path_course = "Resources/course.xml", string path_prereq = "Resources/prereq.xml");
 	void read();
 	void readreq(string);
 	void readcourses(string);

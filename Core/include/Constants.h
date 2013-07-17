@@ -15,7 +15,7 @@
 #include <stdlib.h>
 
 #define PERIODS	4
-#define NCOL 20
+#define NCOL 45
 #define RND(NUM)	rand() % NUM
 
 enum {D_TRUE, D_FALSE, D_NO_DOMINATION};

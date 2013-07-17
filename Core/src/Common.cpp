@@ -82,14 +82,13 @@ void Common::initlab(Lecture* lect, int idx) {
 
 int Common::assign_random_slot(int courseID) {
 	Course *course = &courmat[courseID];
-	//prepare available slots
-	if (!course->split && course->hours == 3) {
-		//do not split 3 hours course.
-		return available_slots[course->semid][2][RND(available_slots[2].size())];
+	int semid = course->semid-1;
+	if (course->hours == 3) {
+		return available_slots[semid][2][RND(available_slots[semid][2].size())];
 	} else if (course->hours == 2) {
-		return available_slots[course->semid][1][RND(available_slots[1].size())];
+		return available_slots[semid][1][RND(available_slots[semid][1].size())];
 	} else if (course->hours == 1) {
-		return available_slots[course->semid][0][RND(available_slots[0].size())];
+		return available_slots[semid][0][RND(available_slots[semid][0].size())];
 	} else {
 #ifdef DEBUG
 		cerr << "unhandled case!" << endl;

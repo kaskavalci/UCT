@@ -9,16 +9,16 @@
 #define CHROMOSOME_H_
 
 #include "Constants.h"
-#include "Fitness.h"
+#include "IFitness.h"
 #include <list>
 
 namespace std {
 class Chromosome {
 public:
-	Chromosome(int chrom_length, int no_colors);
+	Chromosome(int chrom_length);
 	Chromosome(const Chromosome*);
 	virtual ~Chromosome();
-	friend class Fitness;
+	friend class IFitness;
 
 	void add(int section, int slot);
 	void update(int section, int slot);
@@ -49,17 +49,16 @@ public:
 		return fit->getFit();
 	}
 	inline void calcFit(int print, fitness_t &fitness, int type) const {
-		fit->calcFit(print,fitness, type);
+		fit->calcFit(fitness, type, print);
 	}
 	inline void updatefitness(int p) const {
 		fit->updateFitness(p);
 	}
 
 	int chrom_length;
-	int no_colors;
 	//holds the sections assigned to that slot. Used to directly access sections for particular slot.
 
-	Fitness *fit;
+	IFitness *fit;
 private:
 	//our chromosome. Consist of all sections. Value represents the slot they are assigned to.
 	list<int> slot_map[NCOL];

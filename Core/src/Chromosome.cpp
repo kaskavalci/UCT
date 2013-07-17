@@ -7,23 +7,22 @@
 
 #include "Chromosome.h"
 #include <iostream>
+#include "FitnessExp.h"
 
 namespace std {
 
-Chromosome::Chromosome(int chrom_length, int no_colors) {
+Chromosome::Chromosome(int chrom_length) {
 	this->chrom_length = chrom_length;
 	chrom = new vector<int>(chrom_length, -1);
 	day = new vector<int>(chrom_length, -1);
 	slot = new vector<int>(chrom_length, -1);
-	this->no_colors = no_colors;
-	fit = new Fitness(this);
+	fit = new FitnessExp(this);
 }
 
 Chromosome::Chromosome(const Chromosome* source) {
 	int i;
 	this->chrom_length = source->chrom_length;
-	this->no_colors = source->no_colors;
-	this->fit = new Fitness(source->fit);
+	this->fit = new FitnessExp(source->fit);
 	this->fit->setChromosome(this);
 
 	for (i = 0; i < NCOL; ++i) {

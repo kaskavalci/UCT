@@ -39,7 +39,7 @@
     </rect>
    </property>
    <property name="currentIndex">
-    <number>3</number>
+    <number>2</number>
    </property>
    <property name="movable">
     <bool>false</bool>
@@ -854,20 +854,27 @@
     <widget class="QWidget" name="horizontalLayoutWidget_8">
      <property name="geometry">
       <rect>
-       <x>300</x>
+       <x>190</x>
        <y>500</y>
-       <width>402</width>
+       <width>501</width>
        <height>41</height>
       </rect>
      </property>
      <layout class="QHBoxLayout" name="horizontalLayout_8">
+      <item>
+       <widget class="QPushButton" name="pushButton_9">
+        <property name="text">
+         <string>Add Item</string>
+        </property>
+       </widget>
+      </item>
       <item>
        <widget class="QPushButton" name="pushAddCourse">
         <property name="enabled">
          <bool>true</bool>
         </property>
         <property name="text">
-         <string>Add Course</string>
+         <string>Copy Course</string>
         </property>
        </widget>
       </item>
@@ -1030,4 +1037,7 @@
    </hints>
   </connection>
  </connections>
+ <slots>
+  <slot>getDoubleClicked(QModelIndex)</slot>
+ </slots>
 </ui>

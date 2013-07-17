@@ -71,31 +71,40 @@ void FileReader::readcourses(string filename) {
 	}
 
 	hash<string> hash;
-	//traverse xml and fill courmat array
-	for (pugi::xml_node course = doc.child("Courses").child("Course"); course; course = course.next_sibling("Course")) {
-		Course newCourse;
-		newCourse.cname = course.attribute("Name").as_string();
-		newCourse.lname = course.attribute("Lecturer").as_string();
-		newCourse.semid = course.attribute("Semester").as_int();
-		newCourse.hours = course.attribute("NumHours").as_int();
-		newCourse.isLab = course.attribute("isLab").as_bool();
-		newCourse.section = course.attribute("Section").as_int();
-		newCourse.split = course.attribute("Split").as_bool();
+	//for each semester
+	for (pugi::xml_node semester = doc.child("Semesters").child("Semester"); semester;
+			semester = semester.next_sibling("Semester")) {
+		//for each course in that semester
+		for (pugi::xml_node course = semester.child("Course"); course; course = course.next_sibling("Course")) {
+			//for each lab or section in that semester
+			for (pugi::xml_node sect_n_lab : course.children()) {
+				Course newCourse;
+				newCourse.semid = semester.attribute("id").as_int();
+				newCourse.cname = course.attribute("id").as_string();
+				newCourse.lname = sect_n_lab.attribute("Lecturer").as_string();
+				newCourse.hours = sect_n_lab.attribute("Hours").as_int();
+				newCourse.isLab = (strcmp(sect_n_lab.name(), "Lab") == 0) ? true : false;
+				newCourse.section = sect_n_lab.attribute("id").as_int();
+				newCourse.split = sect_n_lab.attribute("Split").as_bool();
 
-		labStatus = newCourse.isLab ? 1 : 0;
-		newCourse.uniqueID = hash(
-				newCourse.cname + boost::lexical_cast<string>(newCourse.section)
-						+ boost::lexical_cast<string>(labStatus));
+				labStatus = newCourse.isLab ? 1 : 0;
+				newCourse.uniqueID = hash(
+						newCourse.cname + boost::lexical_cast<string>(newCourse.section)
+								+ boost::lexical_cast<string>(labStatus));
 
-		//if course have constraint, then update corresponding available slots
-		if (course.attribute("ConstSlot").as_int() != -1) {
-			newCourse.has_cons= true;
-			newCourse.cons_slot = course.attribute("ConstSlot").as_int();
+				//if course have constraint, then update corresponding available slots
+				if (sect_n_lab.attribute("ConsSlot") != pugi::xml_attribute()) {
+					newCourse.has_cons = true;
+					newCourse.cons_slot = sect_n_lab.attribute("ConsSlot").as_int();
+					//update available slots for that course
+					conf->update_available_slots(&newCourse);
+				}
 
-			conf->update_available_slots(&newCourse);
+				i = init_course(newCourse, i);
+			}
 		}
 
-		i = init_course(newCourse, i);
+
 	}
 }
 
@@ -150,7 +159,8 @@ void FileReader::readinputparam(string filename) {
 		} else if (!inpname.compare(PARAM_SLOTS)) {
 			vector<int> onehourList, twohourList, threehourList;
 			string name;
-			for (pugi::xml_node slot_list = course.child("SlotList"); slot_list; slot_list = slot_list.next_sibling("SlotList")) {
+			for (pugi::xml_node slot_list = course.child("SlotList"); slot_list;
+					slot_list = slot_list.next_sibling("SlotList")) {
 				name = slot_list.attribute("Name").as_string();
 				vector<int> *slots;
 				if (!name.compare("OneHour")) {

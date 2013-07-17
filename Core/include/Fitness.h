@@ -9,30 +9,19 @@
 #define FITNESS_H_
 
 #include "Common.h"
+#include "IFitness.h"
 #include <list>
 
 namespace std {
 class Chromosome;
-class Fitness {
+class Fitness : public IFitness {
 public:
 	Fitness(const Chromosome *chromosome);
-	Fitness(const Fitness*);
+	Fitness(const IFitness*);
 	virtual ~Fitness();
-	void calcFit(int, fitness_t&,int);
-	void updateFitness(int);
-
-	const inline fitness_t& getFit() const {
-		return *fitness;
-	}
-
-	void setChromosome(const Chromosome* chromosome) {
-		this->chromosome = chromosome;
-	}
+	void calcFit(fitness_t&, int type = hc_both, int print = 0);
 
 private:
-	const Chromosome *chromosome;
-	Common *conf;
-	fitness_t *fitness;
 	bool labs[3];
 
 	inline bool fit_hconfmat(int i,int j);

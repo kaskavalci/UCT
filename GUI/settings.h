@@ -18,7 +18,6 @@ public:
   ~Settings();
   unsigned long seed;
 
-
 private slots:
   void on_buttonBox_accepted();
 
@@ -44,6 +43,8 @@ private slots:
 
   void on_checkBox_stateChanged(int arg1);
 
+	void on_pushButton_9_clicked();
+
 private:
   Ui::Settings *ui;
   QStandardItemModel *modelPrereq;
@@ -54,14 +55,15 @@ private:
   QStandardItemModel *modelCourses;
   void ReadCourses(QString);
   void WriteCourses(QString);
-  void clearTree();
+	void clearTree();
 
   QStandardItemModel *modelGroups;
   void ReadParam(QString);
   void WriteParam(QString);
 
   QString pathCourse, pathPrereq, pathParameters;
-  enum par {p_name, p_id, p_lecturer, p_hour, p_cons_slot, p_split};
+	enum par {p_name, p_id, p_lecturer, p_hour, p_cons_slot, p_split, P_COUNT};
+	enum sem {p_sem, p_semid};
 
 };
 
