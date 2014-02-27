@@ -350,8 +350,8 @@ void Population::startGA() {
 		crossover();
 		hillclimber();
 		mutation();
-	} while ((duration = getduration()) <= conf->duration);
-
+	} while (it <= conf->iteration);
+	duration = getduration();
 	print_footer(duration, it);
 
 	//cout << endl << "The operation completed in " << getduration() << " seconds." << endl;

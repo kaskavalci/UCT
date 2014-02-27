@@ -227,6 +227,9 @@ Common::Common() {
 	pareto_size = 0;
 	sel_poolsize = 0;
 	sel_candidatesize = 0;
+	iteration = 0;
+	meeting_slot = 5;
+	meeting_duration = 4;
 }
 
 Common::~Common() {

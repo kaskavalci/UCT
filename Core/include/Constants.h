@@ -84,6 +84,7 @@ struct labSession_t {
 
 //parameters.xml node names;
 #define PARAM_DUR "Duration"
+#define PARAM_ITER	"Iteration"
 #define PARAM_HCSIZE  "HCSize"
 #define PARAM_HCRATE  "HCRate"
 #define PARAM_MUTRATE "MutationRate"
@@ -97,5 +98,7 @@ struct labSession_t {
 #define PARAM_SELECTIONCANDIDATESIZE  "SelectionCandidatePoolSize"
 #define PARAM_GROUPS  "Groups"
 #define PARAM_SLOTS  "AvailableSlots"
+#define PARAM_MEETING_SLOT	"MeetingSlot"
+#define PARAM_MEETING_DURATION	"MeetingDuration"
 
 #endif /* CONSTANTS_H_ */

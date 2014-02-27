@@ -23,6 +23,7 @@ private:
 	Common *conf;
 	string p_parameters, p_courses, p_prereq;
 	int init_course(Course, int);
+	void assign_meeting_slot();
 };
 
 }

@@ -20,4 +20,5 @@ std::Course::Course() {
 	has_cons = false;
 	isLab = false;
 	split = false;
+	isCSE = false;
 }

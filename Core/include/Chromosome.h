@@ -37,9 +37,9 @@ public:
 		return slot->at(section);
 	}
 	/**
-	 * returns the timeslot of the given course. Timeslot is from 0-20.
+	 * returns the timeslot of the given course. Timeslot is from 0-NCOL.
 	 * @param section in the chromosome, which is the course's section.
-	 * @return 0-20 timeslot.
+	 * @return 0-NCOL timeslot.
 	 */
 	inline int get_slot(int section) const{
 		return chrom->at(section);

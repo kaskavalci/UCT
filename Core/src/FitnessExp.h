@@ -11,8 +11,7 @@
 #include "IFitness.h"
 
 namespace std {
-class Chromosome;
-class FitnessExp: public std::IFitness {
+class FitnessExp : public IFitness {
 public:
 	FitnessExp(const Chromosome *chromosome);
 	FitnessExp(const IFitness*);
@@ -21,7 +20,11 @@ public:
 	void calcFit(fitness_t& fit, int type = hc_both, int print = 0);
 
 private:
+	Common *conf;
 	void course_conflict(fitness_t& fit);
+	void consecutive_semester_conflict(fitness_t& fit);
+	void lecturer_checks(fitness_t& fit);
+	bool do_overlap(int, int);
 };
 
 }

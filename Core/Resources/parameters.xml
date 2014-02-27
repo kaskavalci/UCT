@@ -1,5 +1,6 @@
 <Parameters>
 	<Parameter Name="Duration" Val="100" />
+	<Parameter Name="Iteration" Val="2" />
 	<Parameter Name="HCSize" Val="1" />
 	<Parameter Name="HCRate" Val="35" />
 	<Parameter Name="MutationRate" Val="1" />
@@ -11,6 +12,8 @@
 	<Parameter Name="ParetoFront" Val="20" />
 	<Parameter Name="SelectionPoolSize" Val="8" />
 	<Parameter Name="SelectionCandidatePoolSize" Val="3" />
+	<Parameter Name="MeetingSlot" Val="4" />
+	<Parameter Name="MeetingDuration" Val="4" />
 	<Parameter Name="Groups">
 		<Group Type="Hard">
 			<Constraint Name="Course Conflict" ID='0' />

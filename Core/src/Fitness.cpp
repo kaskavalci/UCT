@@ -160,9 +160,8 @@ inline bool Fitness::fit_hmidday(int i, int j) {
 									&& chromosome->get_period(i) == 1))));
 }
 
-//todo: dep meet saatlerini öðren
 inline bool Fitness::fit_sdepmeet(int i) {
-	return conf->cse[i] == 1 && chromosome->get_day(i) == 3 && chromosome->get_period(i) == 1;
+	return chromosome->get_day(i) == 3 && chromosome->get_period(i) == 1;
 }
 
 inline bool Fitness::fit_sconssem1(int i, int j) {
@@ -300,11 +299,13 @@ inline void Fitness::h_midday(fitness_t& fit, int print) {
  * @param print indicates print policy. 1 prints
  */
 inline void Fitness::s_depmet(fitness_t& fit, int print) {
-	for (int i = 0; i < conf->ChromSize; ++i) {
-		if (fit_sdepmeet(i)) {
-			INC_SOFT(i, fit_sDepMeeting)
+	size_t size = conf->cse.size();
+	auto it_end = conf->cse.end();
+	for (auto it = conf->cse.begin(); it != it_end; it++) {
+		if (fit_sdepmeet(*it)) {
+			INC_SOFT(*it, fit_sDepMeeting)
 			if (print == 1) {
-				cout << "Soft 15 Departmental Meeting " << conf->courmat[i].cname << endl;
+				cout << "Soft 15 Departmental Meeting " << conf->courmat[*it].cname << endl;
 			}
 		}
 	}
@@ -497,29 +498,28 @@ inline void Fitness::s_LTLconflict(fitness_t& fit, int print) {
  * @param print indicates print policy. 1 prints
  */
 inline void Fitness::s_ConsecSem(fitness_t& fit, int print) {
-	int i, j;
-	for (i = 0; i < conf->ChromSize; i++) {
-		if (conf->cse[i] != 1) continue;
-		for (j = 0; j < conf->ChromSize; ++j) {
-			if (conf->cse[j] != 1) continue;
-			if (fit_sconssem1(i, j)) {
-				INC_SOFT(i, fit_sConsecSemester)
+	size_t size = conf->cse.size();
+	auto it_end = conf->cse.end();
+	for (auto it_i = conf->cse.begin(); it_i != it_end; it_i++) {
+		for (auto it_j = conf->cse.begin(); it_j != it_end; it_j++) {
+			if (fit_sconssem1(*it_i, *it_j)) {
+				INC_SOFT(*it_i, fit_sConsecSemester)
 				if (print == 1) {
-					cout << "Soft 4 Prev Sem Next Sem " << conf->courmat[i].cname << " " << conf->courmat[j].cname
+					cout << "Soft 4 Prev Sem Next Sem " << conf->courmat[*it_i].cname << " " << conf->courmat[*it_j].cname
 							<< endl;
 				}
 			}
-			if (fit_sconssem2(i, j)) {
-				INC_SOFT(i, fit_sConsecSemester)
+			if (fit_sconssem2(*it_i, *it_j)) {
+				INC_SOFT(*it_i, fit_sConsecSemester)
 				if (print == 1) {
-					cout << "Soft 4 Prev Sem Next Sem " << conf->courmat[i].cname << " " << conf->courmat[j].cname
+					cout << "Soft 4 Prev Sem Next Sem " << conf->courmat[*it_i].cname << " " << conf->courmat[*it_j].cname
 							<< endl;
 				}
 			}
-			if (fit_sconssem3(i, j)) {
-				INC_SOFT(i, fit_sConsecSemester)
+			if (fit_sconssem3(*it_i, *it_j)) {
+				INC_SOFT(*it_i, fit_sConsecSemester)
 				if (print == 1) {
-					cout << "Soft 4 Prev Sem Next Sem " << conf->courmat[i].cname << " " << conf->courmat[j].cname
+					cout << "Soft 4 Prev Sem Next Sem " << conf->courmat[*it_i].cname << " " << conf->courmat[*it_j].cname
 							<< endl;
 				}
 			}

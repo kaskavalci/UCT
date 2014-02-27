@@ -31,6 +31,7 @@ void FileReader::read() {
 	readcourses(p_courses);
 	conf->ChromSize = conf->courmat.size();
 	readreq(p_prereq);
+	assign_meeting_slot();
 }
 
 void FileReader::readreq(string filename) {
@@ -104,7 +105,6 @@ void FileReader::readcourses(string filename) {
 			}
 		}
 
-
 	}
 }
 
@@ -123,6 +123,12 @@ void FileReader::readinputparam(string filename) {
 		inpval = course.attribute("Val").as_double();
 		if (!inpname.compare(PARAM_DUR))
 			conf->duration = (time_t) inpval;
+		else if (!inpname.compare(PARAM_ITER))
+			conf->iteration = (int) inpval;
+		else if (!inpname.compare(PARAM_MEETING_SLOT))
+			conf->meeting_slot = (int) inpval;
+		else if (!inpname.compare(PARAM_MEETING_DURATION))
+			conf->meeting_duration = (int) inpval;
 		else if (!inpname.compare(PARAM_HCSIZE))
 			conf->hillsize = inpval;
 		else if (!inpname.compare(PARAM_HCRATE))
@@ -208,11 +214,14 @@ int FileReader::init_course(Course newCourse, int id) {
 	//add lecturer to list and update courses lecturer ID. only add cse courses
 	if (newCourse.cname.substr(0, 3) == "cse") {
 		newCourse.lecturerID = conf->add_lecturer(newCourse.lname, id);
+		newCourse.isCSE = true;
+		conf->cse.push_back(id);
 	} else {
 		//here we assume faculty courses does not have valid lecturer name and they don't need to be in lecturer list.
 		//for solid code we should assign them a lecturerID. uniquenes can be achieved by starting lecturersID by 1000.
 		//we don't expect lecturers more than 1000.
 		newCourse.lecturerID = id + 1000;
+		newCourse.isCSE = false;
 	}
 	//push course to vector
 	conf->courmat.push_back(newCourse);
@@ -222,12 +231,6 @@ int FileReader::init_course(Course newCourse, int id) {
 		conf->add_lecture(newCourse.cname, std::hash<std::string>()(newCourse.cname), id);
 	}
 
-	if (newCourse.cname.substr(0, 3) == "cse")
-		conf->cse.push_back(1);
-	else {
-		conf->cse.push_back(-1);
-	}
-
 	if (toSplit) {
 		newCourse.hours = 1;
 		//overwritten but make sure that split will be false anytime in the execution.
@@ -235,6 +238,36 @@ int FileReader::init_course(Course newCourse, int id) {
 		return init_course(newCourse, id + 1);
 	}
 	return id + 1;
+}
+
+/**
+ * deletes available slots which conflicts with department meeting hour.
+ * logic in this function is that two hour slots which start one hour before meeting hour can
+ * conflict with meeting. Let's say meeting will be held on slot 4. Slot 3 in 2-hour slot list conflicts
+ * with the meeting. Thus its iteration starts with -1. It checks one previous slot. Same thing is for three hours.
+ * It checks 2 slots before. Slot 4 conflicts with slot 2 in 3-hour slot list.
+ */
+void FileReader::assign_meeting_slot() {
+	int meeting = conf->meeting_slot;
+
+	//for each semester
+	for (int i = 0; i < 8; ++i) {
+		for (int j = -2; j < conf->meeting_duration; ++j) {
+			//for one hour slots
+			if (j >= 0) {
+				conf->erase_slot(&conf->available_slots[i][0], meeting + j);
+			}
+
+			//for two hour slots
+			if (j >= -1) {
+				conf->erase_slot(&conf->available_slots[i][1], meeting + j);
+			}
+
+			//for three hour slots
+			conf->erase_slot(&conf->available_slots[i][2], meeting + j);
+		}
+	}
+
 }
 
 } /* namespace std */

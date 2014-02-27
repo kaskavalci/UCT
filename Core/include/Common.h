@@ -43,6 +43,8 @@ public:
 
 	int ChromSize;
 	time_t duration;
+	int iteration;
+	int meeting_slot, meeting_duration;
 	double hillsize;
 	double hcrate;
 	double crrate;
@@ -54,11 +56,11 @@ public:
 	int pareto_size;
 	vector<vector<int> > groups;
 	vector<vector<int> > available_slots[8];
+	void erase_slot(vector<int> *, int);
 private:
 	static bool instanceFlag;
 	static Common *conf;
 	void initlab(Lecture*, int);
-	void erase_slot(vector<int> *, int);
 	Common();
 
 };

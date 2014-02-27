@@ -26,6 +26,7 @@ public:
 	bool has_cons;
 	bool isLab;
 	bool split;
+	bool isCSE;
 };
 
 } /* namespace std */
